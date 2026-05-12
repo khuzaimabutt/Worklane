@@ -539,6 +539,8 @@ CREATE POLICY "Sellers manage own extras" ON public.gig_extras FOR ALL USING (
 DROP POLICY IF EXISTS "Order participants only" ON public.orders;
 CREATE POLICY "Order participants only" ON public.orders FOR ALL USING (
   buyer_id = auth.uid() OR seller_id = auth.uid()
+) WITH CHECK (
+  buyer_id = auth.uid() OR seller_id = auth.uid()
 );
 
 DROP POLICY IF EXISTS "Own notifications only" ON public.notifications;

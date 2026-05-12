@@ -39,7 +39,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
           <div>
             <p className="font-mono text-xs text-neutral-500">{order.order_number}</p>
-            <h1 className="font-heading text-3xl mt-1">{(order.package_snapshot as any).name}</h1>
+            <h1 className="font-heading text-3xl mt-1">{(order.package_snapshot as { name?: string } | null)?.name ?? "Order"}</h1>
             <p className="text-sm text-neutral-600 mt-1">
               {isBuyer ? "Seller:" : "Buyer:"} <strong>{other?.full_name}</strong>
             </p>
@@ -57,7 +57,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           </div>
           <aside className="bg-white border border-neutral-200 rounded-xl p-5 h-fit space-y-2 text-sm">
             <h3 className="font-semibold mb-2">Order Details</h3>
-            <Row label="Package" value={(order.package_snapshot as any).name} />
+            <Row label="Package" value={(order.package_snapshot as { name?: string } | null)?.name ?? "—"} />
             <Row label="Buyer paid" value={formatMoney(order.buyer_total_paid)} />
             {!isBuyer && <Row label="Your earnings" value={formatMoney(order.seller_earnings)} />}
             <Row label="Delivery" value={`${order.delivery_days} days`} />

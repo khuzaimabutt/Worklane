@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateOrderPricing } from "@/lib/utils/fee-calculator";
 import { getPlatformSettings } from "@/lib/supabase/settings";
-import { transitionOrder } from "@/lib/utils/order-workflow";
+import { transitionOrder, generateOrderNumber } from "@/lib/utils/order-workflow";
 
 export async function POST(request: NextRequest) {
   const sb = createClient();
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   const extrasTotal = selected_extras.reduce((s, e) => s + Number(e.price), 0);
   const pricing = calculateOrderPricing(Number(pkg.price), extrasTotal, settings);
 
-  const orderNumber = `SB-${new Date().getFullYear()}-${Math.floor(Math.random() * 90000 + 10000)}`;
+  const orderNumber = await generateOrderNumber();
   const deliveryDue = new Date();
   deliveryDue.setDate(deliveryDue.getDate() + pkg.delivery_days);
 

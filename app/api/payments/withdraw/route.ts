@@ -14,9 +14,26 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient();
-  const { data: profile } = await admin.from("seller_profiles").select("balance_available, mock_bank_name, mock_account_last4").eq("user_id", user.id).single();
+  const { data: profile } = await admin
+    .from("seller_profiles")
+    .select("balance_available, mock_bank_name, mock_account_last4")
+    .eq("user_id", user.id)
+    .single();
   if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-  if (Number(profile.balance_available) < amount) return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+
+  // Atomic conditional decrement: row only updates if balance is still sufficient.
+  // Postgres locks the row on UPDATE, so two parallel withdrawals can't both succeed.
+  const { data: updated, error: balErr } = await admin
+    .from("seller_profiles")
+    .update({ balance_available: Number(profile.balance_available) - amount })
+    .eq("user_id", user.id)
+    .gte("balance_available", amount)
+    .select("balance_available")
+    .maybeSingle();
+
+  if (balErr || !updated) {
+    return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+  }
 
   await admin.from("withdrawals").insert({
     seller_id: user.id,
@@ -25,10 +42,6 @@ export async function POST(request: NextRequest) {
     mock_bank_name: profile.mock_bank_name,
     mock_account_last4: profile.mock_account_last4,
   });
-
-  await admin.from("seller_profiles").update({
-    balance_available: Number(profile.balance_available) - amount,
-  }).eq("user_id", user.id);
 
   const { data: u } = await admin.from("users").select("email, full_name").eq("id", user.id).single();
   if (u) {

@@ -110,26 +110,33 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 6. Deploy to Vercel (5 min)
+## 6. Deploy to Vercel (3 min — already mostly done)
 
-### 6a. Push to GitHub
+### 6a. GitHub repo — already pushed
+✅ Code is live at https://github.com/khuzaimabutt/skillbazaar (public)
 
-```bash
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/khuzaimabutt/skillbazaar.git
-git push -u origin main
-```
+### 6b. Import on Vercel (3 min, all browser)
 
-(Create the empty repo on GitHub first via `gh repo create khuzaimabutt/skillbazaar --private --source=. --remote=origin`)
+1. Go to **https://vercel.com/new** (sign in with GitHub if not already)
+2. Click **Import** next to **khuzaimabutt/skillbazaar**
+3. Framework Preset: **Next.js** (auto-detected) — leave all defaults
+4. Expand **Environment Variables** and **copy/paste them from your local `.env.local` file**. The keys you need to add (values are in `.env.local` — don't commit them):
 
-### 6b. Import on Vercel
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` ⚠️ secret — keep private
+   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (placeholder OK)
+   - `STRIPE_SECRET_KEY` (placeholder OK)
+   - `STRIPE_WEBHOOK_SECRET` (placeholder OK)
+   - `NEXT_PUBLIC_APP_URL` — set to your Vercel URL (you'll update after first deploy)
+   - `ADMIN_EMAILS` — `admin@skillbazaar.test`
+   - `CRON_SECRET` — generate a long random string (any value)
 
-1. [vercel.com](https://vercel.com) → **Add New → Project** → import your repo
-2. Framework auto-detects: Next.js. Leave defaults.
-3. **Environment Variables**: add every key from `.env.local`. Important:
-   - Update `NEXT_PUBLIC_APP_URL` to your Vercel URL once deployed, e.g. `https://skillbazaar.vercel.app`
-4. **Deploy**. First build takes ~3 min.
+5. Click **Deploy** — build takes ~3 minutes
+6. Once it shows "Your project has been deployed", copy your Vercel URL (e.g. `https://skillbazaar-xxxx.vercel.app`)
+7. Go to **Settings → Environment Variables** → edit `NEXT_PUBLIC_APP_URL` to your real Vercel URL → click **Redeploy**
+
+⚠️ If your domain ends up different from `skillbazaar.vercel.app`, step 7 ensures emails contain the right links.
 
 ### 6c. Cron jobs
 `vercel.json` is in the repo — Vercel will discover the 4 cron jobs automatically:

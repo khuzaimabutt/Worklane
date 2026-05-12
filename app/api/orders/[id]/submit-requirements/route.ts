@@ -10,10 +10,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   const { requirements } = await request.json();
   const admin = createAdminClient();
-  await admin.from("orders").update({
+  const { data: order } = await admin.from("orders").select("buyer_id").eq("id", params.id).single();
+  if (!order || order.buyer_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { error: upErr } = await admin.from("orders").update({
     requirements_submitted: true,
     buyer_requirements: requirements,
-  }).eq("id", params.id).eq("buyer_id", user.id);
+  }).eq("id", params.id);
+  if (upErr) return NextResponse.json({ error: "Failed to save requirements" }, { status: 500 });
 
   const result = await transitionOrder(params.id, "in_progress");
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });

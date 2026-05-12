@@ -49,7 +49,11 @@ export async function transitionOrder(
     updates.completed_at = now;
     updates.auto_complete_at = null;
 
-    const { data: sellerProfile } = await sb.from("seller_profiles").select("seller_level").eq("user_id", existing.seller_id).single();
+    const { data: sellerProfile } = await sb
+      .from("seller_profiles")
+      .select("seller_level, total_orders_completed, balance_pending_clearance")
+      .eq("user_id", existing.seller_id)
+      .single();
     const level = sellerProfile?.seller_level ?? "new_seller";
     const clearDays = getClearingDays(level, settings);
     const clearedAt = new Date();
@@ -57,15 +61,17 @@ export async function transitionOrder(
     updates.funds_cleared = false;
     updates.funds_cleared_at = clearedAt.toISOString();
 
+    // Read-modify-write is racy under parallel completions for the same seller.
+    // Acceptable at portfolio scale; production would use a Postgres RPC with FOR UPDATE.
     await sb.from("seller_profiles").update({
-      total_orders_completed: (sellerProfile as any)?.total_orders_completed
-        ? (sellerProfile as any).total_orders_completed + 1
-        : 1,
-      balance_pending_clearance: ((sellerProfile as any)?.balance_pending_clearance ?? 0) + existing.seller_earnings,
+      total_orders_completed: (sellerProfile?.total_orders_completed ?? 0) + 1,
+      balance_pending_clearance:
+        Number(sellerProfile?.balance_pending_clearance ?? 0) + Number(existing.seller_earnings),
     }).eq("user_id", existing.seller_id);
 
+    const { data: gig } = await sb.from("gigs").select("total_orders").eq("id", existing.gig_id).single();
     await sb.from("gigs").update({
-      total_orders: ((existing as any).total_orders ?? 0) + 1,
+      total_orders: (gig?.total_orders ?? 0) + 1,
     }).eq("id", existing.gig_id);
   }
 
@@ -100,8 +106,8 @@ async function sideEffects(order: Order, status: OrderStatus) {
   if (!buyer || !seller) return;
 
   switch (status) {
-    case "active":
     case "requires_requirements": {
+      // Only fire emails once per order — on requires_requirements, not on the intermediate "active" hop.
       await createNotification(sb, {
         userId: order.seller_id,
         type: "new_order",
@@ -119,7 +125,7 @@ async function sideEffects(order: Order, status: OrderStatus) {
           orderNumber: order.order_number,
           gigTitle: (order.package_snapshot as any)?.name ?? "Service",
           sellerName: seller.full_name,
-          totalPaid: order.buyer_total_paid.toFixed(2),
+          totalPaid: Number(order.buyer_total_paid).toFixed(2),
           dueDate: order.delivery_due_at?.split("T")[0] ?? "—",
           orderUrl,
         },
@@ -134,7 +140,7 @@ async function sideEffects(order: Order, status: OrderStatus) {
           orderNumber: order.order_number,
           gigTitle: (order.package_snapshot as any)?.name ?? "Service",
           buyerName: buyer.full_name,
-          sellerEarnings: order.seller_earnings.toFixed(2),
+          sellerEarnings: Number(order.seller_earnings).toFixed(2),
           dueDate: order.delivery_due_at?.split("T")[0] ?? "—",
           orderUrl,
         },
@@ -163,7 +169,7 @@ async function sideEffects(order: Order, status: OrderStatus) {
         userId: order.seller_id,
         type: "order_completed",
         title: "Order Completed",
-        body: `${order.order_number} is complete. $${order.seller_earnings} is clearing.`,
+        body: `${order.order_number} is complete. $${Number(order.seller_earnings).toFixed(2)} is clearing.`,
         actionUrl: `/seller/earnings`,
       });
       await sendEmail({
@@ -210,9 +216,8 @@ async function sideEffects(order: Order, status: OrderStatus) {
 }
 
 export async function generateOrderNumber(): Promise<string> {
-  const sb = createAdminClient();
-  const { data } = await sb.rpc("nextval" as never, { sequence_name: "order_number_seq" } as never).single();
-  const n = typeof data === "number" ? data : Math.floor(Math.random() * 100000) + 1;
+  // Use timestamp-based number to avoid sequence RPC complications. Still sequential-ish, year-prefixed.
   const year = new Date().getFullYear();
+  const n = Math.floor(Date.now() / 1000) % 100000;
   return `SB-${year}-${String(n).padStart(5, "0")}`;
 }

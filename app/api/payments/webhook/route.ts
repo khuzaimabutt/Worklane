@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const event = stripe.webhooks.constructEvent(body, signature, secret);
     // For demo: orders are auto-progressed in /api/orders POST. In production wire payment_intent.succeeded → activate order.
-    console.log("Stripe webhook:", event.type);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Stripe webhook:", event.type);
+    }
   } catch (err) {
     return NextResponse.json({ error: "Webhook signature failed" }, { status: 400 });
   }

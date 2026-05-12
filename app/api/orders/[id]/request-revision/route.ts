@@ -10,8 +10,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   const { message } = await request.json();
   const admin = createAdminClient();
-  const { data: o } = await admin.from("orders").select("revisions_used, revisions_allowed").eq("id", params.id).single();
+  const { data: o } = await admin.from("orders").select("buyer_id, revisions_used, revisions_allowed").eq("id", params.id).single();
   if (!o) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (o.buyer_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (o.revisions_used >= o.revisions_allowed) return NextResponse.json({ error: "No revisions remaining" }, { status: 400 });
 
   await admin.from("orders").update({

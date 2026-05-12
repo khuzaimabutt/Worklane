@@ -90,7 +90,10 @@ export default function MessagesPage() {
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${active.id}` },
         (payload) => {
           setMessages((prev) => [...prev, payload.new as Message]);
-          setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+          setTimeout(() => {
+            const el = scrollRef.current;
+            if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+          }, 50);
         }
       )
       .subscribe();
@@ -100,7 +103,8 @@ export default function MessagesPage() {
   }, [active]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight });
   }, [messages]);
 
   async function sendMessage() {

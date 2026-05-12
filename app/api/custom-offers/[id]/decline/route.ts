@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { transitionOrder } from "@/lib/utils/order-workflow";
 
 export async function POST(_request: NextRequest, { params }: { params: { id: string } }) {
   const sb = createClient();
@@ -9,10 +8,10 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: order } = await admin.from("orders").select("buyer_id").eq("id", params.id).single();
-  if (!order || order.buyer_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { data: offer } = await admin.from("custom_offers").select("*").eq("id", params.id).single();
+  if (!offer || offer.buyer_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (offer.status !== "pending") return NextResponse.json({ error: "Offer not pending" }, { status: 400 });
 
-  const result = await transitionOrder(params.id, "completed");
-  if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
+  await admin.from("custom_offers").update({ status: "declined" }).eq("id", params.id);
   return NextResponse.json({ success: true });
 }

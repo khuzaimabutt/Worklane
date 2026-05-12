@@ -33,7 +33,7 @@ export default async function SellerOrdersPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-mono text-xs text-neutral-500">{o.order_number}</p>
-                    <p className="font-medium truncate">{(o.package_snapshot as any)?.name}</p>
+                    <p className="font-medium truncate">{(o.package_snapshot as any)?.name ?? "Service"}</p>
                     <p className="text-xs text-neutral-500">{formatDate(o.created_at)}</p>
                   </div>
                   <div className="text-right">
