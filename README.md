@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SkillBazaar — Freelance Services Marketplace
 
-## Getting Started
+A production-grade freelance marketplace portfolio project. Browse services, place orders, message sellers, leave reviews, withdraw earnings — all running on a free-tier stack with no real charges.
 
-First, run the development server:
+> **Portfolio mode**: Stripe in **test mode**, **mock** Stripe Connect, **mock** email system that logs to a Supabase table. Functionally complete and visually convincing without real money.
 
+## Features
+- Full-text search across gigs, category/price/delivery filters
+- Gig detail with Basic/Standard/Premium packages + extras
+- Checkout via Stripe test mode with transparent fee breakdown
+- Order lifecycle: requirements → in progress → delivered → revision/accept → completed
+- Real-time messaging (Supabase Realtime) with interactive custom offer cards
+- Seller dashboard: earnings chart, level progress, analytics, 5-step gig wizard
+- Admin: gig approvals, dispute resolution, reports, mock email inbox
+- Vercel Cron: auto-complete orders, clear funds, update seller levels
+
+## Tech Stack
+Next.js 14 App Router + TypeScript strict, Tailwind, Radix UI, Supabase (DB/Auth/Storage/Realtime), Stripe test mode, RHF+Zod, Zustand, Framer Motion, TipTap, Recharts, Lucide, date-fns. Deploy on Vercel.
+
+## Quick Start
+
+### 1. Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Supabase
+1. [supabase.com](https://supabase.com) → New project
+2. SQL Editor → paste `supabase/schema.sql` → Run
+3. Storage → create buckets: `avatars`, `gig-media`, `portfolio` (public) and `order-files` (private)
+4. Authentication → Providers → enable Email/Password
+5. Copy URL + anon key + service_role key from Settings → API
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Stripe (test mode)
+1. [dashboard.stripe.com](https://dashboard.stripe.com) → Test mode
+2. Copy publishable + secret keys from API keys
+3. Webhook (optional): `stripe listen --forward-to localhost:3000/api/payments/webhook`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Env Vars
+```bash
+cp .env.example .env.local
+# fill in real values
+```
 
-## Learn More
+### 5. Seed
+```bash
+npm run seed
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 6. Run
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Test Credentials (after seeding)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@skillbazaar.test` | `Test1234!` |
+| Seller | `ahmad@skillbazaar.test` | `Test1234!` |
+| Buyer | `buyer@skillbazaar.test` | `Test1234!` |
 
-## Deploy on Vercel
+Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy to Vercel
+1. Push to GitHub
+2. [vercel.com](https://vercel.com) → Import Project → select repo
+3. Add env vars in Vercel dashboard
+4. Update `NEXT_PUBLIC_APP_URL` to your Vercel URL
+5. Deploy — `vercel.json` auto-configures crons
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Fee Structure
+- Seller: 20% commission per order
+- Buyer: 5.5% service fee + $2.50 flat fee on orders under $50
+- Tips: platform 20%, seller 80%
+
+All in `platform_settings` table — never hardcoded.
+
+See **MANUAL_SETUP.md** for step-by-step setup.
+
+## License
+MIT — portfolio use.

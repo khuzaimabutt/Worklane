@@ -120,16 +120,30 @@ CREATE TABLE IF NOT EXISTS public.gigs (
   published_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  search_vector TSVECTOR GENERATED ALWAYS AS (
-    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
-    setweight(to_tsvector('english', coalesce(array_to_string(tags, ' '), '')), 'B') ||
-    setweight(to_tsvector('english', coalesce(short_description, '')), 'C')
-  ) STORED
+  search_vector TSVECTOR
 );
 CREATE INDEX IF NOT EXISTS gigs_search_idx ON public.gigs USING GIN(search_vector);
 CREATE INDEX IF NOT EXISTS gigs_seller_idx ON public.gigs(seller_id);
 CREATE INDEX IF NOT EXISTS gigs_category_idx ON public.gigs(category_id);
 CREATE INDEX IF NOT EXISTS gigs_status_idx ON public.gigs(status);
+
+-- Populate search_vector via trigger (GENERATED column would require IMMUTABLE
+-- expressions; to_tsvector with a text config is treated as non-immutable on Supabase).
+CREATE OR REPLACE FUNCTION public.gigs_update_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_vector :=
+    setweight(to_tsvector('english'::regconfig, coalesce(NEW.title, '')), 'A') ||
+    setweight(to_tsvector('english'::regconfig, coalesce(array_to_string(NEW.tags, ' '), '')), 'B') ||
+    setweight(to_tsvector('english'::regconfig, coalesce(NEW.short_description, '')), 'C');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS gigs_search_vector_trigger ON public.gigs;
+CREATE TRIGGER gigs_search_vector_trigger
+  BEFORE INSERT OR UPDATE OF title, tags, short_description ON public.gigs
+  FOR EACH ROW EXECUTE FUNCTION public.gigs_update_search_vector();
 
 -- =====================================================
 -- GIG PACKAGES
