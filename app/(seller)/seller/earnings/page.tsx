@@ -1,9 +1,18 @@
 import { redirect } from "next/navigation";
+import { Wallet, Clock, Coins, XCircle, Landmark } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, formatDate } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/cn";
+
+const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "success" | "warning" | "error" | "info"> = {
+  pending: "warning",
+  processing: "info",
+  paid: "success",
+  failed: "error",
+};
 
 export default async function SellerEarningsPage() {
   const sb = createClient();
@@ -27,97 +36,150 @@ export default async function SellerEarningsPage() {
     .order("requested_at", { ascending: false })
     .limit(10);
 
+  const bankConnected = Boolean(profile.mock_bank_name);
+
   return (
     <>
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="font-heading text-3xl mb-6">Earnings</h1>
+        <header className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mb-1">Seller</p>
+          <h1 className="font-heading text-2xl sm:text-3xl text-ink">Earnings</h1>
+          <p className="text-sm text-ink-subtle mt-1">Balance, clearing schedule, and withdrawals.</p>
+        </header>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card label="Available" value={formatMoney(profile.balance_available)} accent />
-          <Card label="Clearing" value={formatMoney(profile.balance_pending_clearance)} />
-          <Card label="Lifetime" value={formatMoney(profile.total_earnings_lifetime)} />
-          <Card label="Cancelled Orders" value={profile.total_orders_cancelled.toString()} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <BalanceCard label="Available" value={formatMoney(profile.balance_available)} icon={<Wallet className="w-4 h-4" />} accent />
+          <BalanceCard label="Clearing" value={formatMoney(profile.balance_pending_clearance)} icon={<Clock className="w-4 h-4" />} />
+          <BalanceCard label="Lifetime" value={formatMoney(profile.total_earnings_lifetime)} icon={<Coins className="w-4 h-4" />} />
+          <BalanceCard label="Cancelled" value={profile.total_orders_cancelled.toString()} icon={<XCircle className="w-4 h-4" />} />
         </div>
 
-        <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-xl">Withdraw</h2>
-            <Button variant="cta">Request Withdrawal</Button>
+        <section className="bg-white border border-line rounded-2xl p-6 sm:p-7 mb-6">
+          <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h2 className="font-heading text-lg text-ink">Withdraw funds</h2>
+              <p className="text-sm text-ink-subtle mt-1">Move your available balance to your bank account.</p>
+            </div>
+            <button
+              disabled={!bankConnected || profile.balance_available <= 0}
+              className="inline-flex h-10 px-4 items-center rounded-md bg-brand-primary text-white text-sm font-semibold hover:bg-brand-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Request withdrawal
+            </button>
           </div>
-          {profile.mock_bank_name ? (
-            <p className="text-sm text-neutral-600">
-              Connected: <strong>{profile.mock_bank_name}</strong> ****{profile.mock_account_last4}
-            </p>
-          ) : (
-            <p className="text-sm text-neutral-500">Connect a bank account to enable withdrawals.</p>
-          )}
-        </div>
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-canvas-subtle border border-line">
+            <div className="w-9 h-9 rounded-md bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center shrink-0">
+              <Landmark className="w-4 h-4" />
+            </div>
+            {bankConnected ? (
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink truncate">{profile.mock_bank_name}</p>
+                <p className="text-xs text-ink-subtle">Account ending in {profile.mock_account_last4}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-ink-subtle">No bank account connected — link one to enable withdrawals.</p>
+            )}
+          </div>
+        </section>
 
-        <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
-          <h2 className="font-heading text-xl mb-4">Clearing Schedule</h2>
+        <section className="bg-white border border-line rounded-2xl p-6 sm:p-7 mb-6">
+          <h2 className="font-heading text-lg text-ink mb-4">Clearing schedule</h2>
           {!clearing || clearing.length === 0 ? (
-            <p className="text-sm text-neutral-500">No funds currently clearing.</p>
+            <p className="text-sm text-ink-subtle">No funds currently clearing.</p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-neutral-500 border-b border-neutral-200">
-                  <th className="py-2">Order</th>
-                  <th>Gig</th>
-                  <th className="text-right">Amount</th>
-                  <th className="text-right">Clears</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clearing.map((c) => (
-                  <tr key={c.id} className="border-b border-neutral-100 last:border-0">
-                    <td className="py-2 font-mono text-xs">{c.order_number}</td>
-                    <td>{(c.package_snapshot as any)?.name ?? "—"}</td>
-                    <td className="text-right">{formatMoney(c.seller_earnings)}</td>
-                    <td className="text-right text-xs">{c.funds_cleared_at ? formatDate(c.funds_cleared_at) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table
+              headers={["Order", "Gig", "Amount", "Clears"]}
+              rightAlign={[false, false, true, true]}
+              rows={clearing.map((c) => [
+                <span className="font-mono text-2xs text-ink-subtle">{c.order_number}</span>,
+                <span className="text-ink">{(c.package_snapshot as any)?.name ?? "—"}</span>,
+                <span className="text-ink font-medium tabular-nums">{formatMoney(c.seller_earnings)}</span>,
+                <span className="text-ink-subtle text-xs">{c.funds_cleared_at ? formatDate(c.funds_cleared_at) : "—"}</span>,
+              ])}
+            />
           )}
-        </div>
+        </section>
 
-        <div className="bg-white border border-neutral-200 rounded-xl p-6">
-          <h2 className="font-heading text-xl mb-4">Withdrawal History</h2>
+        <section className="bg-white border border-line rounded-2xl p-6 sm:p-7">
+          <h2 className="font-heading text-lg text-ink mb-4">Withdrawal history</h2>
           {!withdrawals || withdrawals.length === 0 ? (
-            <p className="text-sm text-neutral-500">No withdrawals yet.</p>
+            <p className="text-sm text-ink-subtle">No withdrawals yet.</p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-neutral-500 border-b border-neutral-200">
-                  <th className="py-2">Requested</th>
-                  <th className="text-right">Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {withdrawals.map((w) => (
-                  <tr key={w.id} className="border-b border-neutral-100 last:border-0">
-                    <td className="py-2">{formatDate(w.requested_at)}</td>
-                    <td className="text-right">{formatMoney(w.amount)}</td>
-                    <td className="capitalize">{w.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table
+              headers={["Requested", "Amount", "Status"]}
+              rightAlign={[false, true, false]}
+              rows={withdrawals.map((w) => [
+                <span className="text-ink">{formatDate(w.requested_at)}</span>,
+                <span className="font-medium text-ink tabular-nums">{formatMoney(w.amount)}</span>,
+                <Badge variant={STATUS_VARIANT[w.status] ?? "secondary"} className="capitalize">{w.status}</Badge>,
+              ])}
+            />
           )}
-        </div>
+        </section>
       </main>
       <Footer />
     </>
   );
 }
 
-function Card({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function BalanceCard({
+  label,
+  value,
+  icon,
+  accent,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent?: boolean;
+}) {
   return (
-    <div className={`border rounded-xl p-4 ${accent ? "border-brand-primary bg-brand-primary/5" : "border-neutral-200 bg-white"}`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="font-heading text-2xl mt-1">{value}</p>
+    <div
+      className={cn(
+        "rounded-2xl p-5 border",
+        accent ? "bg-brand-primary-50 border-brand-primary/25" : "bg-white border-line"
+      )}
+    >
+      <div className={cn("flex items-center gap-2 mb-2 text-xs uppercase tracking-wider font-semibold",
+        accent ? "text-brand-primary-dark" : "text-ink-subtle")}>
+        <span>{icon}</span>
+        <span>{label}</span>
+      </div>
+      <p className="font-heading text-2xl sm:text-[1.75rem] text-ink tabular-nums tracking-tight">{value}</p>
+    </div>
+  );
+}
+
+function Table({
+  headers,
+  rightAlign,
+  rows,
+}: {
+  headers: string[];
+  rightAlign: boolean[];
+  rows: React.ReactNode[][];
+}) {
+  return (
+    <div className="overflow-x-auto -mx-2">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-2xs font-semibold uppercase tracking-wider text-ink-subtle border-b border-line">
+            {headers.map((h, i) => (
+              <th key={i} className={cn("py-2.5 px-2", rightAlign[i] && "text-right")}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} className="border-b border-line-subtle last:border-0">
+              {row.map((cell, ci) => (
+                <td key={ci} className={cn("py-3 px-2", rightAlign[ci] && "text-right")}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
