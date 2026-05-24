@@ -18,7 +18,25 @@ interface SearchParams {
   page?: string;
 }
 
-async function searchGigs(params: SearchParams) {
+type GigRow = {
+  id: string;
+  slug: string;
+  title: string;
+  thumbnail_url: string | null;
+  average_rating: number | null;
+  total_reviews: number | null;
+  seller_id: string;
+  category_id: string;
+  starting_price: number;
+  seller: {
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+    seller_level: "new_seller" | "level_one" | "level_two" | "top_rated";
+  };
+};
+
+async function searchGigs(params: SearchParams): Promise<{ gigs: GigRow[]; count: number }> {
   try {
     const sb = createClient();
     let query = sb
@@ -38,8 +56,43 @@ async function searchGigs(params: SearchParams) {
     const page = parseInt(params.page ?? "1", 10);
     query = query.range((page - 1) * 12, page * 12 - 1);
 
-    const { data, count } = await query;
-    return { gigs: data ?? [], count: count ?? 0 };
+    const { data: gigRows, count } = await query;
+    if (!gigRows || gigRows.length === 0) return { gigs: [], count: count ?? 0 };
+
+    const sellerIds = Array.from(new Set(gigRows.map((g: any) => g.seller_id)));
+    const gigIds = gigRows.map((g: any) => g.id);
+
+    const [{ data: users }, { data: profiles }, { data: packages }] = await Promise.all([
+      sb.from("users").select("id, username, full_name, avatar_url").in("id", sellerIds),
+      sb.from("seller_profiles").select("user_id, seller_level").in("user_id", sellerIds),
+      sb.from("gig_packages").select("gig_id, price").in("gig_id", gigIds),
+    ]);
+
+    const userById = new Map((users ?? []).map((u: any) => [u.id, u]));
+    const profileById = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+    const minPriceByGig = new Map<string, number>();
+    for (const p of packages ?? []) {
+      const cur = minPriceByGig.get((p as any).gig_id);
+      const price = Number((p as any).price);
+      if (cur == null || price < cur) minPriceByGig.set((p as any).gig_id, price);
+    }
+
+    const gigs: GigRow[] = gigRows.map((g: any) => {
+      const u = userById.get(g.seller_id) as any;
+      const p = profileById.get(g.seller_id) as any;
+      return {
+        ...g,
+        starting_price: minPriceByGig.get(g.id) ?? 0,
+        seller: {
+          username: u?.username ?? "seller",
+          full_name: u?.full_name ?? "Seller",
+          avatar_url: u?.avatar_url ?? null,
+          seller_level: p?.seller_level ?? "new_seller",
+        },
+      };
+    });
+
+    return { gigs, count: count ?? 0 };
   } catch {
     return { gigs: [], count: 0 };
   }
@@ -106,16 +159,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {gigs.map((g: any) => {
+                {gigs.map((g) => {
                   const card: GigCardData = {
                     id: g.id,
                     slug: g.slug,
                     title: g.title,
                     thumbnail_url: g.thumbnail_url,
-                    average_rating: g.average_rating || 0,
-                    total_reviews: g.total_reviews || 0,
-                    starting_price: 50,
-                    seller: { username: "seller", full_name: "Seller", avatar_url: null, seller_level: "new_seller" },
+                    average_rating: g.average_rating ?? 0,
+                    total_reviews: g.total_reviews ?? 0,
+                    starting_price: g.starting_price,
+                    seller: g.seller,
                   };
                   return <GigCard key={g.id} gig={card} />;
                 })}
