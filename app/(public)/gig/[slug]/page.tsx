@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, RotateCcw, Lock, Heart, Share2 } from "lucide-react";
+import { ChevronRight, Clock, RotateCcw, ShieldCheck, Heart, Share2, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SellerLevelBadge } from "@/components/seller/seller-level-badge";
 import { RatingStars } from "@/components/ui/rating-stars";
-import { Badge } from "@/components/ui/badge";
 import { OrderCard } from "@/components/gig/order-card";
 import { ReviewsSection } from "@/components/gig/reviews-section";
 import { createClient } from "@/lib/supabase/server";
@@ -35,122 +34,137 @@ export default async function GigDetailPage({ params }: { params: { slug: string
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <p className="text-xs text-neutral-500 mb-4">
-          <Link href="/" className="hover:text-brand-primary">Home</Link>
-          {category && <> {" › "} <Link href={`/category/${category.slug}`} className="hover:text-brand-primary">{category.name}</Link></>}
-          {" › "}<span className="text-neutral-700">{gig.title.slice(0, 50)}...</span>
-        </p>
-
-        <div className="grid lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-6">
-            <h1 className="font-heading text-3xl md:text-4xl">{gig.title}</h1>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <Link href={`/seller/${seller.username}`} className="flex items-center gap-3 hover:underline min-w-0">
-                <Avatar className="w-10 h-10 shrink-0">
-                  {seller.avatar_url && <AvatarImage src={seller.avatar_url} />}
-                  <AvatarFallback>{initials(seller.full_name)}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="font-medium text-sm flex items-center gap-2 truncate">
-                    {seller.full_name}
-                    {isOnline(seller.last_seen) && <span className="w-2 h-2 rounded-full bg-success shrink-0" />}
-                  </p>
-                  <p className="text-xs text-neutral-500 truncate">@{seller.username}</p>
-                </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <nav aria-label="Breadcrumb" className="text-xs text-ink-subtle mb-5 flex items-center gap-1.5 flex-wrap">
+          <Link href="/" className="hover:text-ink transition-colors">Home</Link>
+          {category && (
+            <>
+              <ChevronRight className="w-3 h-3 text-ink-faint" />
+              <Link href={`/category/${category.slug}`} className="hover:text-ink transition-colors">
+                {category.name}
               </Link>
-              <SellerLevelBadge level={profile.seller_level} />
-              <div className="flex items-center gap-1 text-sm shrink-0">
-                <RatingStars value={gig.average_rating || 0} size={14} />
-                <span className="font-medium">{(gig.average_rating || 0).toFixed(1)}</span>
-                <span className="text-neutral-500">({gig.total_reviews || 0})</span>
+            </>
+          )}
+          <ChevronRight className="w-3 h-3 text-ink-faint" />
+          <span className="text-ink-muted truncate">{gig.title}</span>
+        </nav>
+
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-10">
+          <div className="lg:col-span-8 space-y-6">
+            <div>
+              <h1 className="font-heading text-2xl sm:text-3xl lg:text-[2rem] text-ink text-balance leading-tight mb-4">
+                {gig.title}
+              </h1>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <Link
+                  href={`/seller/${seller.username}`}
+                  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity min-w-0"
+                >
+                  <Avatar className="w-8 h-8 shrink-0 border border-line">
+                    {seller.avatar_url && <AvatarImage src={seller.avatar_url} />}
+                    <AvatarFallback className="text-xs bg-canvas-subtle">{initials(seller.full_name)}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-sm text-ink truncate">{seller.full_name}</span>
+                </Link>
+                <SellerLevelBadge level={profile.seller_level} />
+                {isOnline(seller.last_seen) && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-green-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                    Online
+                  </span>
+                )}
+                <span className="text-ink-faint">·</span>
+                <div className="flex items-center gap-1 text-sm shrink-0">
+                  <RatingStars value={gig.average_rating || 0} size={14} />
+                  <span className="font-semibold text-ink ml-0.5">{(gig.average_rating || 0).toFixed(1)}</span>
+                  <span className="text-ink-subtle">({gig.total_reviews || 0})</span>
+                </div>
               </div>
             </div>
 
-            <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-neutral-100">
+            <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-canvas-subtle border border-line">
               {gig.thumbnail_url ? (
-                <Image src={gig.thumbnail_url} alt={gig.title} fill className="object-cover" />
+                <Image src={gig.thumbnail_url} alt={gig.title} fill className="object-cover" priority />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-neutral-300 font-heading text-6xl">
+                <div className="absolute inset-0 flex items-center justify-center text-ink-faint text-5xl font-semibold tracking-tight">
                   SkillBazaar
                 </div>
               )}
             </div>
 
-            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: gig.description }} />
+            <section className="bg-white border border-line rounded-2xl p-6 sm:p-7">
+              <h2 className="font-heading text-lg text-ink mb-4">About this gig</h2>
+              <div
+                className="prose prose-sm max-w-none prose-headings:font-semibold prose-headings:text-ink prose-p:text-ink prose-strong:text-ink prose-a:text-brand-primary-dark"
+                dangerouslySetInnerHTML={{ __html: gig.description }}
+              />
 
-            {gig.tags && gig.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {gig.tags.map((t: string) => (
-                  <Badge key={t} variant="secondary">{t}</Badge>
-                ))}
-              </div>
-            )}
-
-            {extras && extras.length > 0 && (
-              <div className="border-t border-neutral-200 pt-6">
-                <h2 className="font-heading text-2xl mb-4">Enhance Your Order</h2>
-                <div className="space-y-2">
-                  {extras.map((ex: any) => (
-                    <label key={ex.id} className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg cursor-pointer hover:border-brand-primary transition">
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" className="text-brand-primary" />
-                        <div>
-                          <p className="text-sm font-medium">{ex.title}</p>
-                          {ex.description && <p className="text-xs text-neutral-500">{ex.description}</p>}
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium">+{formatMoney(ex.price)}</span>
-                    </label>
+              {gig.tags && gig.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-5 pt-5 border-t border-line">
+                  {gig.tags.map((t: string) => (
+                    <span
+                      key={t}
+                      className="px-2.5 h-7 inline-flex items-center bg-canvas-subtle border border-line text-xs text-ink-muted rounded-full"
+                    >
+                      {t}
+                    </span>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </section>
 
             {gig.faq && Array.isArray(gig.faq) && gig.faq.length > 0 && (
-              <div className="border-t border-neutral-200 pt-6">
-                <h2 className="font-heading text-2xl mb-4">Frequently Asked Questions</h2>
-                <div className="space-y-3">
+              <section className="bg-white border border-line rounded-2xl p-6 sm:p-7">
+                <h2 className="font-heading text-lg text-ink mb-4">Frequently asked questions</h2>
+                <div className="divide-y divide-line">
                   {(gig.faq as Array<{ question: string; answer: string }>).map((f, i) => (
-                    <details key={i} className="border border-neutral-200 rounded-lg p-4">
-                      <summary className="font-medium cursor-pointer">{f.question}</summary>
-                      <p className="mt-2 text-sm text-neutral-700">{f.answer}</p>
+                    <details key={i} className="group py-4 first:pt-0 last:pb-0">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-ink list-none">
+                        <span>{f.question}</span>
+                        <ChevronRight className="w-4 h-4 text-ink-subtle transition-transform group-open:rotate-90" />
+                      </summary>
+                      <p className="mt-3 text-sm text-ink-muted leading-relaxed">{f.answer}</p>
                     </details>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            <div className="border-t border-neutral-200 pt-6">
-              <h2 className="font-heading text-2xl mb-4">About the Seller</h2>
-              <div className="bg-neutral-50 rounded-xl p-6 flex gap-4">
-                <Avatar className="w-16 h-16">
+            <section className="bg-white border border-line rounded-2xl p-6 sm:p-7">
+              <h2 className="font-heading text-lg text-ink mb-5">About the seller</h2>
+              <div className="flex gap-5 items-start">
+                <Avatar className="w-16 h-16 shrink-0 border border-line">
                   {seller.avatar_url && <AvatarImage src={seller.avatar_url} />}
-                  <AvatarFallback>{initials(seller.full_name)}</AvatarFallback>
+                  <AvatarFallback className="bg-canvas-subtle">{initials(seller.full_name)}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold">{seller.full_name}</h3>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="font-heading text-base text-ink">{seller.full_name}</h3>
                     <SellerLevelBadge level={profile.seller_level} />
                   </div>
-                  <p className="text-xs text-neutral-500 mb-2">@{seller.username}</p>
-                  {profile.tagline && <p className="text-sm mb-3">{profile.tagline}</p>}
-                  <div className="grid grid-cols-2 gap-y-1 text-xs text-neutral-600">
-                    <span>Member since {new Date(seller.created_at).getFullYear()}</span>
-                    <span>{profile.response_time_hours ?? "—"} hr avg response</span>
-                    <span>{profile.total_orders_completed} orders</span>
-                    <span>{profile.on_time_delivery_rate}% on-time</span>
+                  <p className="text-xs text-ink-subtle mb-3">@{seller.username}</p>
+                  {profile.tagline && (
+                    <p className="text-sm text-ink leading-relaxed mb-4">{profile.tagline}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 text-xs mb-4 pb-4 border-b border-line">
+                    <StatRow label="Member since" value={new Date(seller.created_at).getFullYear().toString()} />
+                    <StatRow label="Avg. response" value={`${profile.response_time_hours ?? "—"} hr`} />
+                    <StatRow label="Orders done" value={profile.total_orders_completed.toString()} />
+                    <StatRow label="On-time" value={`${profile.on_time_delivery_rate}%`} />
                   </div>
-                  <Link
-                    href={`/seller/${seller.username}`}
-                    className="mt-3 inline-block text-sm text-brand-primary hover:underline"
-                  >
-                    View Full Profile →
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link href={`/seller/${seller.username}`} className="btn-secondary">
+                      View profile
+                    </Link>
+                    <button className="btn-ghost">
+                      <MessageCircle className="w-4 h-4" />
+                      Contact
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             <ReviewsSection
               reviews={reviews ?? []}
@@ -162,25 +176,18 @@ export default async function GigDetailPage({ params }: { params: { slug: string
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-3">
               <OrderCard packages={packages as any} extras={extras as any} gigId={gig.id} />
-              <div className="bg-white border border-neutral-200 rounded-xl p-4 grid grid-cols-3 gap-2 text-center text-xs text-neutral-600">
-                <div>
-                  <Clock className="w-5 h-5 mx-auto mb-1 text-brand-primary" />
-                  On-Time Delivery
-                </div>
-                <div>
-                  <RotateCcw className="w-5 h-5 mx-auto mb-1 text-brand-primary" />
-                  Revision Policy
-                </div>
-                <div>
-                  <Lock className="w-5 h-5 mx-auto mb-1 text-brand-primary" />
-                  Escrow Payment
-                </div>
+
+              <div className="bg-white border border-line rounded-xl p-4 grid grid-cols-3 gap-2">
+                <TrustBadge icon={<Clock className="w-4 h-4" />} label="On-time delivery" />
+                <TrustBadge icon={<RotateCcw className="w-4 h-4" />} label="Free revisions" />
+                <TrustBadge icon={<ShieldCheck className="w-4 h-4" />} label="Escrow protected" />
               </div>
+
               <div className="flex gap-2">
-                <button className="flex-1 inline-flex items-center justify-center gap-2 py-2 border border-neutral-300 rounded-lg text-sm hover:bg-neutral-50">
+                <button className="flex-1 inline-flex items-center justify-center gap-2 h-10 bg-white border border-line-strong rounded-md text-sm font-medium text-ink-muted hover:bg-canvas-subtle hover:text-ink transition-colors">
                   <Heart className="w-4 h-4" /> Save
                 </button>
-                <button className="flex-1 inline-flex items-center justify-center gap-2 py-2 border border-neutral-300 rounded-lg text-sm hover:bg-neutral-50">
+                <button className="flex-1 inline-flex items-center justify-center gap-2 h-10 bg-white border border-line-strong rounded-md text-sm font-medium text-ink-muted hover:bg-canvas-subtle hover:text-ink transition-colors">
                   <Share2 className="w-4 h-4" /> Share
                 </button>
               </div>
@@ -190,5 +197,25 @@ export default async function GigDetailPage({ params }: { params: { slug: string
       </main>
       <Footer />
     </>
+  );
+}
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-baseline">
+      <span className="text-ink-subtle">{label}</span>
+      <span className="font-semibold text-ink tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="text-center">
+      <div className="w-9 h-9 mx-auto mb-1.5 rounded-full bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center">
+        {icon}
+      </div>
+      <p className="text-2xs text-ink-muted leading-tight font-medium">{label}</p>
+    </div>
   );
 }
