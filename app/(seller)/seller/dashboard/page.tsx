@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, ArrowRight, Wallet, Clock, TrendingUp, Coins, Package, ShoppingBag, Star } from "lucide-react";
+import { Plus, ArrowRight, Wallet, Clock, TrendingUp, Coins, Package, ShoppingBag, Star, Check } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { SellerLevelBadge } from "@/components/seller/seller-level-badge";
@@ -24,6 +24,19 @@ export default async function SellerDashboardPage() {
     sb.from("orders").select("seller_earnings, created_at").eq("seller_id", user.id).gte("created_at", new Date(Date.now() - 30 * 86400000).toISOString()),
   ]);
   const monthEarnings = (monthOrders ?? []).reduce((s, o) => s + Number(o.seller_earnings), 0);
+
+  const completion = [
+    { label: "Add a profile photo", done: Boolean(user.avatar_url), href: "/settings" },
+    { label: "Write a tagline", done: Boolean(profile.tagline && profile.tagline.length > 10), href: "/settings" },
+    { label: "Write a bio (120+ chars)", done: Boolean(profile.description && profile.description.length >= 120), href: "/settings" },
+    { label: "Add 3+ skills", done: Boolean(profile.skills && profile.skills.length >= 3), href: "/settings" },
+    { label: "Publish your first gig", done: (activeGigs ?? 0) > 0, href: "/seller/gigs/create" },
+    { label: "Add portfolio items", done: Boolean((profile.portfolio_items as any[] | null)?.length), href: "/settings" },
+    { label: "Connect your bank", done: Boolean(profile.stripe_onboarding_complete), href: "/become-seller" },
+  ];
+  const completedCount = completion.filter((c) => c.done).length;
+  const completionPct = Math.round((completedCount / completion.length) * 100);
+  const missing = completion.filter((c) => !c.done);
 
   return (
     <>
@@ -94,6 +107,54 @@ export default async function SellerDashboardPage() {
             icon={<Star className="w-4 h-4" />}
           />
         </div>
+
+        {missing.length > 0 && (
+          <div className="bg-white border border-line rounded-2xl p-6 sm:p-7 mb-6">
+            <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
+              <h2 className="font-heading text-lg text-ink">Profile completeness</h2>
+              <span className="text-sm font-semibold text-brand-primary-dark tabular-nums">
+                {completionPct}% complete
+              </span>
+            </div>
+            <p className="text-sm text-ink-subtle mb-4">
+              Sellers with complete profiles get ~3× more orders. {missing.length} step{missing.length === 1 ? "" : "s"} left.
+            </p>
+            <div className="h-2 bg-canvas-subtle rounded-full overflow-hidden mb-5">
+              <div
+                className="h-full bg-brand-primary rounded-full transition-all"
+                style={{ width: `${completionPct}%` }}
+              />
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-2">
+              {completion.map((c) => (
+                <li key={c.label}>
+                  <Link
+                    href={c.href}
+                    className={cn(
+                      "group flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors",
+                      c.done ? "text-ink-subtle" : "hover:bg-canvas-subtle"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-4 h-4 rounded-full flex items-center justify-center shrink-0",
+                        c.done ? "bg-brand-primary text-white" : "bg-white border border-line"
+                      )}
+                    >
+                      {c.done && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                    </span>
+                    <span className={cn("text-sm flex-1", c.done ? "line-through" : "text-ink")}>
+                      {c.label}
+                    </span>
+                    {!c.done && (
+                      <ArrowRight className="w-3.5 h-3.5 text-ink-faint group-hover:text-ink group-hover:translate-x-0.5 transition-all" />
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="bg-white border border-line rounded-2xl p-6 sm:p-7">
           <div className="flex items-baseline justify-between mb-1">
