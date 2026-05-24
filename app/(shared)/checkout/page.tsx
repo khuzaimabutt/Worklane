@@ -2,21 +2,27 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Lock, Loader2, Info } from "lucide-react";
+import { Lock, Loader2, Info, ShieldCheck, ChevronLeft } from "lucide-react";
+import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PriceDisplay } from "@/components/ui/price-display";
 import { createClient } from "@/lib/supabase/client";
 import { calculateOrderPricing, DEFAULT_PLATFORM_SETTINGS } from "@/lib/utils/fee-calculator";
 import { formatMoney } from "@/lib/utils/format";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils/cn";
 import type { GigPackage, Gig } from "@/types/database.types";
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="text-center py-16"><Loader2 className="w-6 h-6 animate-spin mx-auto text-neutral-400" /></div>}>
+    <Suspense
+      fallback={
+        <div className="text-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-ink-faint" />
+        </div>
+      }
+    >
       <CheckoutInner />
     </Suspense>
   );
@@ -37,6 +43,7 @@ function CheckoutInner() {
   const [cvc, setCvc] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (!gigId || !pkgId) return;
@@ -45,7 +52,13 @@ function CheckoutInner() {
       const [{ data: g }, { data: p }, { data: ex }] = await Promise.all([
         sb.from("gigs").select("*").eq("id", gigId).single(),
         sb.from("gig_packages").select("*").eq("id", pkgId).single(),
-        sb.from("gig_extras").select("*").in("id", extrasParam ? extrasParam.split(",").filter(Boolean) : ["00000000-0000-0000-0000-000000000000"]),
+        sb
+          .from("gig_extras")
+          .select("*")
+          .in(
+            "id",
+            extrasParam ? extrasParam.split(",").filter(Boolean) : ["00000000-0000-0000-0000-000000000000"]
+          ),
       ]);
       setGig(g as Gig);
       setPkg(p as GigPackage);
@@ -58,7 +71,7 @@ function CheckoutInner() {
       <>
         <Navbar />
         <main className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-400" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-ink-faint" />
         </main>
         <Footer />
       </>
@@ -68,7 +81,20 @@ function CheckoutInner() {
   const extrasTotal = extras.reduce((s, e) => s + Number(e.price), 0);
   const pricing = calculateOrderPricing(Number(pkg.price), extrasTotal, DEFAULT_PLATFORM_SETTINGS);
 
+  const errors = {
+    card: card.length !== 16 ? "Card number must be 16 digits" : "",
+    exp: !/^\d{2}\/\d{2}$/.test(exp) ? "Use MM/YY format" : "",
+    cvc: cvc.length < 3 ? "CVC must be 3–4 digits" : "",
+    name: name.trim().length < 2 ? "Required" : "",
+  };
+  const valid = !errors.card && !errors.exp && !errors.cvc && !errors.name;
+
   async function placeOrder() {
+    setTouched(true);
+    if (!valid) {
+      toast.error("Please fill in all card details.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/orders", {
@@ -91,84 +117,183 @@ function CheckoutInner() {
     }
   }
 
+  function fmtExpiry(v: string) {
+    const digits = v.replace(/\D/g, "").slice(0, 4);
+    if (digits.length < 3) return digits;
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+
+  function fmtCard(v: string) {
+    return v.replace(/\D/g, "").slice(0, 16);
+  }
+
   return (
     <>
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="font-heading text-3xl mb-6">Checkout</h1>
-        <div className="grid md:grid-cols-2 gap-6">
-          <section className="bg-white border border-neutral-200 rounded-xl p-6">
-            <h2 className="font-semibold mb-4">Order Summary</h2>
-            <p className="text-sm font-medium mb-1">{gig.title}</p>
-            <p className="text-xs text-neutral-500 mb-4">
-              {pkg.name} · {pkg.delivery_days} days · {pkg.revisions === -1 ? "Unlimited" : pkg.revisions} revisions
-            </p>
-            {extras.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-neutral-500 mb-1">Add-ons</p>
-                {extras.map((e) => (
-                  <div key={e.id} className="flex justify-between text-sm">
-                    <span>{e.title}</span>
-                    <span>{formatMoney(Number(e.price))}</span>
-                  </div>
-                ))}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <Link
+          href={`/gig/${gig.slug}`}
+          className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink mb-4 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to gig
+        </Link>
+
+        <h1 className="font-heading text-2xl sm:text-3xl text-ink mb-1">Secure checkout</h1>
+        <p className="text-sm text-ink-subtle mb-8">
+          Review your order, then complete payment to release the brief to your seller.
+        </p>
+
+        <div className="grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8">
+          <section className="space-y-5">
+            <div className="bg-info/5 border border-info/20 rounded-xl p-4 flex items-start gap-3">
+              <Info className="w-5 h-5 text-info shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-ink mb-0.5">Demo mode — no real charge</p>
+                <p className="text-ink-muted leading-relaxed">
+                  Stripe is in test mode. Use card <code className="px-1.5 py-0.5 bg-white border border-line rounded text-xs">4242 4242 4242 4242</code>,
+                  any future expiry, any CVC.
+                </p>
               </div>
-            )}
-            <PriceDisplay
-              subtotal={pricing.orderSubtotal}
-              serviceFee={pricing.buyerServiceFee}
-              smallOrderFee={pricing.buyerSmallOrderFee}
-              total={pricing.buyerTotalPaid}
-              className="border-t border-neutral-100 pt-3"
-            />
-            <p className="text-xs text-neutral-500 mt-4">
-              Funds held securely in escrow until you accept delivery.
-            </p>
+            </div>
+
+            <div className="bg-white border border-line rounded-2xl p-6 sm:p-7">
+              <h2 className="font-heading text-base text-ink mb-5">Payment details</h2>
+              <div className="space-y-4">
+                <Field label="Cardholder name" error={touched ? errors.name : ""}>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="As shown on card"
+                    autoComplete="cc-name"
+                  />
+                </Field>
+
+                <Field label="Card number" error={touched ? errors.card : ""}>
+                  <div className="relative">
+                    <Input
+                      value={card.replace(/(\d{4})(?=\d)/g, "$1 ")}
+                      onChange={(e) => setCard(fmtCard(e.target.value))}
+                      placeholder="1234 5678 9012 3456"
+                      inputMode="numeric"
+                      autoComplete="cc-number"
+                      className="pr-14"
+                    />
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
+                  </div>
+                </Field>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Expiry" error={touched ? errors.exp : ""}>
+                    <Input
+                      value={exp}
+                      onChange={(e) => setExp(fmtExpiry(e.target.value))}
+                      placeholder="MM/YY"
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
+                    />
+                  </Field>
+                  <Field label="CVC" error={touched ? errors.cvc : ""}>
+                    <Input
+                      value={cvc}
+                      onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="123"
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 mt-5 text-xs text-ink-subtle">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-brand-primary-dark mt-0.5" />
+                <p>
+                  Your payment is held in escrow by SkillBazaar until you approve the delivery.
+                  We never share your card details with the seller.
+                </p>
+              </div>
+            </div>
           </section>
 
-          <section className="bg-white border border-neutral-200 rounded-xl p-6">
-            <div className="flex items-start gap-2 bg-info/10 border border-info/20 rounded-lg p-3 mb-4 text-xs text-info">
-              <Info className="w-4 h-4 shrink-0 mt-0.5" />
-              <p>
-                <strong>Demo mode:</strong> Stripe is in test mode. Use card{" "}
-                <code className="bg-white px-1 rounded">4242 4242 4242 4242</code>, any future expiry, any CVC.
-              </p>
-            </div>
-            <h2 className="font-semibold mb-4">Payment Method</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Card Number</label>
-                <Input
-                  value={card}
-                  onChange={(e) => setCard(e.target.value.replace(/\D/g, "").slice(0, 16))}
-                  placeholder="4242 4242 4242 4242"
-                />
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="bg-white border border-line rounded-2xl overflow-hidden shadow-card">
+              <div className="p-5 border-b border-line bg-canvas-subtle">
+                <h2 className="font-heading text-base text-ink mb-2">Order summary</h2>
+                <p className="text-sm font-medium text-ink line-clamp-2">{gig.title}</p>
+                <p className="text-xs text-ink-subtle mt-1">
+                  {pkg.name} · {pkg.delivery_days} days · {pkg.revisions === -1 ? "Unlimited" : pkg.revisions} revisions
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Expiry</label>
-                  <Input value={exp} onChange={(e) => setExp(e.target.value)} placeholder="MM/YY" />
+
+              <div className="p-5 space-y-2 text-sm border-b border-line">
+                <div className="flex justify-between text-ink-muted">
+                  <span>Package</span>
+                  <span className="tabular-nums">{formatMoney(Number(pkg.price))}</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">CVC</label>
-                  <Input value={cvc} onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" />
+                {extras.length > 0 && (
+                  <>
+                    {extras.map((e) => (
+                      <div key={e.id} className="flex justify-between text-ink-muted">
+                        <span className="truncate pr-2">+ {e.title}</span>
+                        <span className="tabular-nums shrink-0">{formatMoney(Number(e.price))}</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                <div className="flex justify-between text-ink-subtle text-xs pt-2">
+                  <span>Service fee</span>
+                  <span className="tabular-nums">{formatMoney(pricing.buyerServiceFee)}</span>
                 </div>
+                {pricing.buyerSmallOrderFee > 0 && (
+                  <div className="flex justify-between text-ink-subtle text-xs">
+                    <span>Small order fee</span>
+                    <span className="tabular-nums">{formatMoney(pricing.buyerSmallOrderFee)}</span>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Name on Card</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+
+              <div className="p-5 flex justify-between text-base font-semibold text-ink border-b border-line">
+                <span>Total</span>
+                <span className="tabular-nums">{formatMoney(pricing.buyerTotalPaid)}</span>
+              </div>
+
+              <div className="p-5 space-y-2">
+                <button
+                  onClick={placeOrder}
+                  disabled={loading}
+                  className={cn(
+                    "w-full h-12 inline-flex items-center justify-center gap-2 rounded-md text-sm font-semibold transition-colors",
+                    "bg-brand-primary text-white hover:bg-brand-primary-dark disabled:opacity-60 disabled:cursor-not-allowed"
+                  )}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      Pay {formatMoney(pricing.buyerTotalPaid)}
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-ink-subtle text-center leading-relaxed">
+                  Funds held in escrow until you accept delivery.
+                </p>
               </div>
             </div>
-            <Button variant="cta" size="lg" className="w-full mt-6" onClick={placeOrder} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Place Order — ${formatMoney(pricing.buyerTotalPaid)}`}
-            </Button>
-            <p className="text-xs text-neutral-500 mt-3 flex items-center gap-1 justify-center">
-              <Lock className="w-3 h-3" /> Secured by Stripe. Your payment info is encrypted.
-            </p>
-          </section>
+          </aside>
         </div>
       </main>
       <Footer />
     </>
+  );
+}
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink mb-1.5">{label}</label>
+      {children}
+      {error && <p className="mt-1 text-xs text-error">{error}</p>}
+    </div>
   );
 }
