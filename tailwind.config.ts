@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['"Instrument Serif"', "serif"],
+        heading: ['"Inter"', "system-ui", "sans-serif"],
         sans: ['"Inter"', "system-ui", "sans-serif"],
       },
       colors: {

@@ -59,13 +59,13 @@ export function GigCard({ gig, className }: { gig: GigCardData; className?: stri
 
       <div className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <Avatar className="w-6 h-6">
+          <Avatar className="w-6 h-6 shrink-0">
             {gig.seller.avatar_url && <AvatarImage src={gig.seller.avatar_url} />}
             <AvatarFallback className="text-[10px]">{initials(gig.seller.full_name)}</AvatarFallback>
           </Avatar>
-          <span className="text-xs text-neutral-700 truncate flex-1">{gig.seller.full_name}</span>
+          <span className="text-xs text-neutral-700 truncate min-w-0 flex-1">{gig.seller.full_name}</span>
           {gig.seller.seller_level !== "new_seller" && (
-            <SellerLevelBadge level={gig.seller.seller_level} className="text-[9px]" />
+            <SellerLevelBadge level={gig.seller.seller_level} className="text-[9px] shrink-0" />
           )}
         </div>
 

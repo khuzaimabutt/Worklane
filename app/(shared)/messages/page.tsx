@@ -210,10 +210,11 @@ export default function MessagesPage() {
                   )}
                 </div>
                 <div className="border-t border-neutral-200 p-3 flex items-center gap-2">
-                  <button className="p-2 text-neutral-500 hover:text-brand-primary" aria-label="Attach">
+                  <button className="shrink-0 p-2 text-neutral-500 hover:text-brand-primary" aria-label="Attach">
                     <Paperclip className="w-4 h-4" />
                   </button>
                   <Input
+                    className="min-w-0 flex-1"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {

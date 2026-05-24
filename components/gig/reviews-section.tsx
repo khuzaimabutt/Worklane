@@ -56,14 +56,16 @@ export function ReviewsSection({
           {reviews.slice(0, visible).map((r) => (
             <div key={r.id} className="border-b border-neutral-100 pb-4">
               <div className="flex items-center gap-3 mb-2">
-                <Avatar className="w-8 h-8">
+                <Avatar className="w-8 h-8 shrink-0">
                   <AvatarFallback className="text-xs">U</AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Buyer</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">Buyer</p>
                   <p className="text-xs text-neutral-500">{fromNow(r.created_at)}</p>
                 </div>
-                <RatingStars value={r.overall_rating} size={12} />
+                <div className="shrink-0">
+                  <RatingStars value={r.overall_rating} size={12} />
+                </div>
               </div>
               <p className="text-sm text-neutral-700">{r.review_text}</p>
               {r.seller_response && (

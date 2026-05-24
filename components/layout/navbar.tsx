@@ -50,8 +50,8 @@ export function Navbar() {
           SkillBazaar
         </Link>
 
-        <form onSubmit={onSearch} className="hidden md:flex flex-1 max-w-xl">
-          <div className="relative w-full">
+        <form onSubmit={onSearch} className="hidden md:flex flex-1 min-w-0 max-w-xl">
+          <div className="relative w-full min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
               value={query}

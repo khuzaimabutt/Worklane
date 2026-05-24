@@ -18,7 +18,7 @@ const wrapper = (heading: string, body: string) => `
 <html><body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;color:#111827;">
   <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
     <div style="background:#0D9488;padding:30px;border-radius:12px 12px 0 0;text-align:center;">
-      <h1 style="color:#fff;margin:0;font-family:'Instrument Serif',serif;font-size:28px;font-weight:400;">${heading}</h1>
+      <h1 style="color:#fff;margin:0;font-family:'Inter',Arial,sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.01em;">${heading}</h1>
     </div>
     <div style="background:#fff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #E5E7EB;border-top:none;">
       ${body}

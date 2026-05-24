@@ -34,12 +34,12 @@ export default async function SellerProfilePage({ params }: { params: { username
         <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-12 pb-12">
           <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <Avatar className="w-24 h-24 border-4 border-white -mt-12 shadow-lg">
+              <Avatar className="w-24 h-24 border-4 border-white -mt-12 shadow-lg shrink-0">
                 {user.avatar_url && <AvatarImage src={user.avatar_url} />}
                 <AvatarFallback className="text-2xl">{initials(user.full_name)}</AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <h1 className="font-heading text-3xl">{user.full_name}</h1>
+              <div className="min-w-0 flex-1">
+                <h1 className="font-heading text-3xl break-words">{user.full_name}</h1>
                 <div className="flex items-center gap-2 mt-1 mb-3 flex-wrap text-sm text-neutral-600">
                   <span>@{user.username}</span>
                   <SellerLevelBadge level={profile.seller_level} />

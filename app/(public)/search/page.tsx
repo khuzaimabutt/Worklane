@@ -103,9 +103,9 @@ function FilterSidebar() {
       <div>
         <h3 className="font-semibold text-sm mb-3">Price Range</h3>
         <div className="flex items-center gap-2">
-          <input placeholder="Min" className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm" />
-          <span>—</span>
-          <input placeholder="Max" className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm" />
+          <input placeholder="Min" className="min-w-0 flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+          <span className="shrink-0 text-neutral-400">—</span>
+          <input placeholder="Max" className="min-w-0 flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
         </div>
       </div>
       <div>

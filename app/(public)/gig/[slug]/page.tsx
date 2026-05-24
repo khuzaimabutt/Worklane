@@ -46,22 +46,22 @@ export default async function GigDetailPage({ params }: { params: { slug: string
           <div className="lg:col-span-8 space-y-6">
             <h1 className="font-heading text-3xl md:text-4xl">{gig.title}</h1>
 
-            <div className="flex items-center gap-3">
-              <Link href={`/seller/${seller.username}`} className="flex items-center gap-3 hover:underline">
-                <Avatar className="w-10 h-10">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Link href={`/seller/${seller.username}`} className="flex items-center gap-3 hover:underline min-w-0">
+                <Avatar className="w-10 h-10 shrink-0">
                   {seller.avatar_url && <AvatarImage src={seller.avatar_url} />}
                   <AvatarFallback>{initials(seller.full_name)}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium text-sm flex items-center gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm flex items-center gap-2 truncate">
                     {seller.full_name}
-                    {isOnline(seller.last_seen) && <span className="w-2 h-2 rounded-full bg-success" />}
+                    {isOnline(seller.last_seen) && <span className="w-2 h-2 rounded-full bg-success shrink-0" />}
                   </p>
-                  <p className="text-xs text-neutral-500">@{seller.username}</p>
+                  <p className="text-xs text-neutral-500 truncate">@{seller.username}</p>
                 </div>
               </Link>
               <SellerLevelBadge level={profile.seller_level} />
-              <div className="flex items-center gap-1 text-sm">
+              <div className="flex items-center gap-1 text-sm shrink-0">
                 <RatingStars value={gig.average_rating || 0} size={14} />
                 <span className="font-medium">{(gig.average_rating || 0).toFixed(1)}</span>
                 <span className="text-neutral-500">({gig.total_reviews || 0})</span>

@@ -29,13 +29,13 @@ export default async function DashboardPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Avatar className="w-14 h-14">
+          <Avatar className="w-14 h-14 shrink-0">
             {user.avatar_url && <AvatarImage src={user.avatar_url} />}
             <AvatarFallback>{initials(user.full_name)}</AvatarFallback>
           </Avatar>
-          <div>
-            <h1 className="font-heading text-3xl">Welcome back, {user.full_name.split(" ")[0]}</h1>
-            <p className="text-sm text-neutral-500">@{user.username}</p>
+          <div className="min-w-0">
+            <h1 className="font-heading text-3xl truncate">Welcome back, {user.full_name.split(" ")[0]}</h1>
+            <p className="text-sm text-neutral-500 truncate">@{user.username}</p>
           </div>
         </div>
 
