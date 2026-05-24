@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { SearchAutocomplete } from "@/components/search/search-autocomplete";
+import { useUser } from "@/lib/contexts/user-context";
 import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
-import type { User } from "@/types/database.types";
 
 const NAV_LINKS = [
   { href: "/search", label: "Browse" },
@@ -28,34 +28,33 @@ const NAV_LINKS = [
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useUser();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
+    if (!user) {
+      setUnread(0);
+      return;
+    }
     const sb = createClient();
     let convChannel: ReturnType<typeof sb.channel> | null = null;
 
+    async function refreshUnread() {
+      const { data: convs } = await sb
+        .from("conversations")
+        .select("buyer_id, seller_id, buyer_unread_count, seller_unread_count")
+        .or(`buyer_id.eq.${user!.id},seller_id.eq.${user!.id}`);
+      const total = (convs ?? []).reduce((sum, c) => {
+        const isBuyer = c.buyer_id === user!.id;
+        return sum + (isBuyer ? c.buyer_unread_count : c.seller_unread_count);
+      }, 0);
+      setUnread(total);
+    }
+
     (async () => {
-      const { data: { user: authUser } } = await sb.auth.getUser();
-      if (!authUser) return;
-      const { data } = await sb.from("users").select("*").eq("id", authUser.id).single();
-      setUser((data as User) ?? null);
-
-      async function refreshUnread() {
-        const { data: convs } = await sb
-          .from("conversations")
-          .select("buyer_id, seller_id, buyer_unread_count, seller_unread_count")
-          .or(`buyer_id.eq.${authUser!.id},seller_id.eq.${authUser!.id}`);
-        const total = (convs ?? []).reduce((sum, c) => {
-          const isBuyer = c.buyer_id === authUser!.id;
-          return sum + (isBuyer ? c.buyer_unread_count : c.seller_unread_count);
-        }, 0);
-        setUnread(total);
-      }
-
       await refreshUnread();
       convChannel = sb
-        .channel("nav-conv-unread")
+        .channel(`nav-conv-unread-${user.id}`)
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "conversations" },
@@ -67,7 +66,7 @@ export function Navbar() {
     return () => {
       if (convChannel) sb.removeChannel(convChannel);
     };
-  }, []);
+  }, [user]);
 
   async function signOut() {
     await fetch("/api/auth/signout", { method: "POST" });
