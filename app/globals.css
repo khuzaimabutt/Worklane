@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #F8F6F2;
   --foreground: #111827;
 
   --brand-primary: #0D9488;
@@ -14,17 +14,15 @@
   --brand-accent-dark: #EA6C0A;
 }
 
-* {
-  border-color: #E5E7EB;
-}
-
 html,
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6,
@@ -32,13 +30,30 @@ h1, h2, h3, h4, h5, h6,
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 600;
   letter-spacing: -0.015em;
+  color: #111827;
+}
+
+h1, .font-heading.text-3xl, .font-heading.text-4xl, .font-heading.text-5xl {
+  letter-spacing: -0.025em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: #CCFBF1;
+  color: #0F766E;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-
+  .text-pretty {
+    text-wrap: pretty;
+  }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -46,32 +61,52 @@ h1, h2, h3, h4, h5, h6,
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .ring-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-primary-dark transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-brand-primary text-white px-4 h-10 rounded-md text-sm font-medium hover:bg-brand-primary-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-cta {
-    @apply bg-brand-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-brand-accent-dark transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-brand-accent text-white px-5 h-11 rounded-md text-sm font-semibold hover:bg-brand-accent-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-secondary {
-    @apply bg-white border border-brand-primary text-brand-primary px-4 py-2 rounded-lg font-medium hover:bg-brand-primary/5 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-white border border-line-strong text-ink px-4 h-10 rounded-md text-sm font-medium hover:bg-canvas-subtle hover:border-ink-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-ghost {
-    @apply bg-transparent text-brand-primary px-4 py-2 rounded-lg font-medium hover:bg-brand-primary/5 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 text-ink-muted px-4 h-10 rounded-md text-sm font-medium hover:bg-ink/5 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .card-base {
-    @apply bg-white border border-neutral-200 rounded-xl;
+    @apply bg-white border border-line rounded-xl;
   }
   .card-hover {
-    @apply hover:shadow-md hover:border-neutral-300 transition-all;
+    @apply transition-shadow hover:shadow-card-hover hover:border-line-strong;
+  }
+  .input-base {
+    @apply w-full h-10 px-3 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-colors;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border border-line-strong text-xs font-medium text-ink-muted hover:border-ink-faint transition-colors;
+  }
+  .chip-active {
+    @apply inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-primary text-white text-xs font-medium border border-brand-primary;
+  }
+  .section-divider {
+    @apply border-t border-line;
   }
 }
 
-/* Hero subtle background pattern */
 .hero-bg {
-  background-color: #FFFFFF;
-  background-image: radial-gradient(circle at 1px 1px, rgba(13, 148, 136, 0.08) 1px, transparent 0);
-  background-size: 40px 40px;
+  background-color: #F8F6F2;
+  background-image: radial-gradient(circle at 1px 1px, rgba(13, 148, 136, 0.06) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #EFEDE8 0%, #F8F6F2 50%, #EFEDE8 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
 }
