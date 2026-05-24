@@ -15,7 +15,7 @@ export type EmailTemplate =
 
 const wrapper = (heading: string, body: string) => `
 <!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#F9FAFB;font-family:'DM Sans',Arial,sans-serif;color:#111827;">
+<html><body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;color:#111827;">
   <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
     <div style="background:#0D9488;padding:30px;border-radius:12px 12px 0 0;text-align:center;">
       <h1 style="color:#fff;margin:0;font-family:'Instrument Serif',serif;font-size:28px;font-weight:400;">${heading}</h1>

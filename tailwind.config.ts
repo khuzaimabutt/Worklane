@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         heading: ['"Instrument Serif"', "serif"],
-        sans: ['"DM Sans"', "system-ui", "sans-serif"],
+        sans: ['"Inter"', "system-ui", "sans-serif"],
       },
       colors: {
         brand: {
