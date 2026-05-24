@@ -92,10 +92,10 @@ export default async function SellerEarningsPage() {
               headers={["Order", "Gig", "Amount", "Clears"]}
               rightAlign={[false, false, true, true]}
               rows={clearing.map((c) => [
-                <span className="font-mono text-2xs text-ink-subtle">{c.order_number}</span>,
-                <span className="text-ink">{(c.package_snapshot as any)?.name ?? "—"}</span>,
-                <span className="text-ink font-medium tabular-nums">{formatMoney(c.seller_earnings)}</span>,
-                <span className="text-ink-subtle text-xs">{c.funds_cleared_at ? formatDate(c.funds_cleared_at) : "—"}</span>,
+                <span key="num" className="font-mono text-2xs text-ink-subtle">{c.order_number}</span>,
+                <span key="name" className="text-ink">{(c.package_snapshot as any)?.name ?? "—"}</span>,
+                <span key="amt" className="text-ink font-medium tabular-nums">{formatMoney(c.seller_earnings)}</span>,
+                <span key="clears" className="text-ink-subtle text-xs">{c.funds_cleared_at ? formatDate(c.funds_cleared_at) : "—"}</span>,
               ])}
             />
           )}
@@ -110,9 +110,9 @@ export default async function SellerEarningsPage() {
               headers={["Requested", "Amount", "Status"]}
               rightAlign={[false, true, false]}
               rows={withdrawals.map((w) => [
-                <span className="text-ink">{formatDate(w.requested_at)}</span>,
-                <span className="font-medium text-ink tabular-nums">{formatMoney(w.amount)}</span>,
-                <Badge variant={STATUS_VARIANT[w.status] ?? "secondary"} className="capitalize">{w.status}</Badge>,
+                <span key="date" className="text-ink">{formatDate(w.requested_at)}</span>,
+                <span key="amt" className="font-medium text-ink tabular-nums">{formatMoney(w.amount)}</span>,
+                <Badge key="status" variant={STATUS_VARIANT[w.status] ?? "secondary"} className="capitalize">{w.status}</Badge>,
               ])}
             />
           )}

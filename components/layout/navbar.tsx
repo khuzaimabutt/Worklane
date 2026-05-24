@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, Menu, Heart, User as UserIcon, LayoutDashboard, MessageCircle, Settings, ShieldCheck, LogOut } from "lucide-react";
+import { Bell, Menu, Search, Heart, User as UserIcon, LayoutDashboard, MessageCircle, Settings, ShieldCheck, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {

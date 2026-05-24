@@ -109,7 +109,7 @@ export default function MessagesPage() {
     return () => {
       sb.removeChannel(channel);
     };
-  }, [active]);
+  }, [active, userId]);
 
   useEffect(() => {
     const el = scrollRef.current;
