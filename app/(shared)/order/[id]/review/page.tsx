@@ -2,10 +2,10 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Star, ChevronLeft } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Switch } from "@/components/ui/switch";
@@ -47,32 +47,58 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   return (
     <>
       <Navbar />
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
-        <div className="bg-white border border-neutral-200 rounded-xl p-6">
-          <h1 className="font-heading text-2xl mb-2">Leave a Review</h1>
-          <p className="text-sm text-neutral-500 mb-6">Your review is public and permanent.</p>
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
+        <Link
+          href={`/order/${id}`}
+          className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink mb-4 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to order
+        </Link>
 
-          <div className="space-y-6">
+        <div className="bg-white border border-line rounded-2xl p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center">
+              <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
+            </div>
+            <h1 className="font-heading text-xl text-ink">Leave a review</h1>
+          </div>
+          <p className="text-sm text-ink-muted leading-relaxed mb-6">
+            Your review is public and permanent. Be specific — buyers and sellers both rely on
+            real feedback.
+          </p>
+
+          <div className="space-y-5">
             <RatingRow label="Overall experience" value={overall} onChange={setOverall} />
             <RatingRow label="Communication" value={communication} onChange={setCommunication} />
             <RatingRow label="Service as described" value={described} onChange={setDescribed} />
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Would you recommend this seller?</label>
-              <Switch checked={recommend} onCheckedChange={setRecommend} />
+
+            <div className="flex items-center justify-between gap-3 py-3 border-y border-line">
+              <label htmlFor="recommend" className="text-sm font-medium text-ink">
+                Would you recommend this seller?
+              </label>
+              <Switch id="recommend" checked={recommend} onCheckedChange={setRecommend} />
             </div>
+
             <div>
-              <label className="text-sm font-medium mb-1 block">Your review</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Your review</label>
               <Textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={6}
-                placeholder="Share your experience working with this seller..."
+                placeholder="Share your experience working with this seller…"
               />
-              <p className="text-xs text-neutral-500 mt-1">{text.length}/1000 (min 15)</p>
+              <p className="text-2xs text-ink-subtle mt-1">{text.length}/1000 · min 15</p>
             </div>
-            <Button onClick={submit} disabled={loading || text.length < 15} variant="cta" size="lg" className="w-full">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Post Review"}
-            </Button>
+
+            <button
+              onClick={submit}
+              disabled={loading || text.length < 15}
+              className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-md bg-brand-primary text-white text-sm font-semibold hover:bg-brand-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              Post review
+            </button>
           </div>
         </div>
       </main>
@@ -83,9 +109,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
 function RatingRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex items-center justify-between">
-      <label className="text-sm font-medium">{label}</label>
-      <RatingStars value={value} onChange={onChange} interactive size={24} />
+    <div className="flex items-center justify-between gap-3">
+      <label className="text-sm font-medium text-ink">{label}</label>
+      <RatingStars value={value} onChange={onChange} interactive size={22} />
     </div>
   );
 }
