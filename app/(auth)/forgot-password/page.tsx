@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -25,38 +26,70 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl border border-neutral-200 shadow-sm">
-        <h1 className="text-3xl font-heading text-center mb-2">Reset password</h1>
-        {sent ? (
-          <p className="text-center text-neutral-600 mt-4">
-            If an account exists for <strong>{email}</strong>, a reset link has been logged. Check the{" "}
-            <Link href="/admin/emails" className="text-brand-primary hover:underline">admin email inbox</Link>{" "}
-            (portfolio demo).
-          </p>
-        ) : (
-          <>
-            <p className="text-neutral-500 text-center mb-6">Enter your email to receive a reset link</p>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary"
-              />
-              {error && <p className="text-error text-sm">{error}</p>}
-              <button type="submit" disabled={loading} className="w-full btn-primary flex items-center justify-center gap-2">
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Send Reset Link
-              </button>
-            </form>
-            <p className="mt-4 text-sm text-center">
-              <Link href="/login" className="text-brand-primary hover:underline">Back to sign in</Link>
-            </p>
-          </>
-        )}
+    <div className="min-h-screen flex items-center justify-center bg-canvas px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="text-2xl font-semibold text-brand-primary tracking-tight">
+            SkillBazaar
+          </Link>
+        </div>
+        <div className="bg-white p-7 sm:p-8 rounded-2xl border border-line shadow-card">
+          {sent ? (
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center">
+                <MailCheck className="w-5 h-5" />
+              </div>
+              <h1 className="font-heading text-xl text-ink mb-2">Check your email</h1>
+              <p className="text-sm text-ink-muted leading-relaxed mb-6">
+                If an account exists for <strong className="text-ink">{email}</strong>, we&apos;ve sent a
+                reset link. The link expires in 1 hour.
+              </p>
+              <p className="text-xs text-ink-subtle leading-relaxed bg-canvas-subtle border border-line rounded-md p-3">
+                <strong>Portfolio demo:</strong> emails are logged, not actually sent. Check the{" "}
+                <Link href="/admin/emails" className="text-brand-primary-dark font-medium hover:underline">
+                  admin email inbox
+                </Link>.
+              </p>
+            </div>
+          ) : (
+            <>
+              <h1 className="font-heading text-2xl text-ink text-center mb-1.5">Reset password</h1>
+              <p className="text-sm text-ink-subtle text-center mb-6">
+                We&apos;ll email you a link to set a new password.
+              </p>
+              <form onSubmit={onSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1.5">Email</label>
+                  <Input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-error bg-error/5 border border-error/20 rounded-md px-3 py-2">{error}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-md bg-brand-primary text-white text-sm font-semibold hover:bg-brand-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Send reset link
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+        <p className="text-sm text-center text-ink-muted mt-6">
+          <Link href="/login" className="inline-flex items-center gap-1 font-medium text-brand-primary-dark hover:underline">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to sign in
+          </Link>
+        </p>
       </div>
     </div>
   );
