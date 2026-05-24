@@ -2,12 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Paperclip, Loader2 } from "lucide-react";
+import { Send, Paperclip, Loader2, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/client";
 import { initials, fromNow } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
@@ -127,7 +125,9 @@ export default function MessagesPage() {
     return (
       <>
         <Navbar />
-        <main className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></main>
+        <main className="flex justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-ink-faint" />
+        </main>
       </>
     );
   }
@@ -136,36 +136,53 @@ export default function MessagesPage() {
     <>
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        <div className="bg-white border border-neutral-200 rounded-xl flex h-[calc(100vh-9rem)] overflow-hidden">
-          <aside className="w-72 border-r border-neutral-200 flex flex-col">
-            <div className="p-4 border-b border-neutral-200">
-              <h2 className="font-heading text-xl">Messages</h2>
+        <div className="bg-white border border-line rounded-2xl flex h-[calc(100vh-9rem)] overflow-hidden shadow-card">
+          <aside className="w-80 border-r border-line flex flex-col">
+            <div className="px-5 h-16 flex items-center border-b border-line">
+              <h2 className="font-heading text-lg text-ink">Messages</h2>
+              {conversations.length > 0 && (
+                <span className="ml-auto text-2xs uppercase tracking-wider font-semibold text-ink-subtle">
+                  {conversations.length}
+                </span>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto">
               {conversations.length === 0 ? (
-                <EmptyState title="No conversations" description="Your messages will appear here" />
+                <div className="px-5 py-10 text-center">
+                  <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center">
+                    <MessageCircle className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-ink font-medium mb-1">No conversations</p>
+                  <p className="text-xs text-ink-subtle">Your messages will appear here.</p>
+                </div>
               ) : (
                 conversations.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => setActive(c)}
                     className={cn(
-                      "w-full text-left p-3 border-b border-neutral-100 hover:bg-neutral-50 flex gap-3",
-                      active?.id === c.id && "bg-neutral-50"
+                      "w-full text-left px-4 py-3 border-b border-line-subtle flex gap-3 transition-colors",
+                      active?.id === c.id ? "bg-brand-primary-50" : "hover:bg-canvas-subtle"
                     )}
                   >
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 shrink-0 border border-line">
                       {c.other_user.avatar_url && <AvatarImage src={c.other_user.avatar_url} />}
-                      <AvatarFallback>{initials(c.other_user.full_name)}</AvatarFallback>
+                      <AvatarFallback className="text-xs bg-white text-ink-muted">
+                        {initials(c.other_user.full_name)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium truncate">{c.other_user.full_name}</p>
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <p className={cn("text-sm font-semibold truncate", active?.id === c.id ? "text-brand-primary-dark" : "text-ink")}>
+                          {c.other_user.full_name}
+                        </p>
                         {c.last_message_at && (
-                          <span className="text-xs text-neutral-500 shrink-0">{fromNow(c.last_message_at)}</span>
+                          <span className="text-2xs text-ink-subtle shrink-0">{fromNow(c.last_message_at)}</span>
                         )}
                       </div>
-                      <p className="text-xs text-neutral-500 truncate">{c.last_message_preview ?? "No messages yet"}</p>
+                      <p className="text-xs text-ink-subtle truncate">
+                        {c.last_message_preview ?? "No messages yet"}
+                      </p>
                     </div>
                   </button>
                 ))
@@ -173,20 +190,22 @@ export default function MessagesPage() {
             </div>
           </aside>
 
-          <section className="flex-1 flex flex-col">
+          <section className="flex-1 flex flex-col min-w-0">
             {active ? (
               <>
-                <header className="border-b border-neutral-200 p-3 flex items-center gap-3">
-                  <Avatar className="w-9 h-9">
+                <header className="border-b border-line px-5 h-16 flex items-center gap-3">
+                  <Avatar className="w-9 h-9 shrink-0 border border-line">
                     {active.other_user.avatar_url && <AvatarImage src={active.other_user.avatar_url} />}
-                    <AvatarFallback>{initials(active.other_user.full_name)}</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-canvas-subtle text-ink-muted">
+                      {initials(active.other_user.full_name)}
+                    </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-medium text-sm">{active.other_user.full_name}</p>
-                    <p className="text-xs text-neutral-500">@{active.other_user.username}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-ink truncate">{active.other_user.full_name}</p>
+                    <p className="text-xs text-ink-subtle truncate">@{active.other_user.username}</p>
                   </div>
                 </header>
-                <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-3 bg-canvas-subtle">
                   {messages.map((m) => {
                     const mine = m.sender_id === userId;
                     if (m.message_type === "custom_offer" && m.custom_offer_id) {
@@ -196,8 +215,10 @@ export default function MessagesPage() {
                       <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                         <div
                           className={cn(
-                            "max-w-[70%] rounded-2xl px-3 py-2 text-sm",
-                            mine ? "bg-brand-primary text-white" : "bg-neutral-100 text-neutral-900"
+                            "max-w-[70%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+                            mine
+                              ? "bg-brand-primary text-white rounded-br-md"
+                              : "bg-white text-ink border border-line rounded-bl-md"
                           )}
                         >
                           {m.content}
@@ -206,11 +227,14 @@ export default function MessagesPage() {
                     );
                   })}
                   {messages.length === 0 && (
-                    <p className="text-center text-sm text-neutral-500 py-8">No messages yet. Say hi!</p>
+                    <p className="text-center text-sm text-ink-subtle py-8">No messages yet. Say hi!</p>
                   )}
                 </div>
-                <div className="border-t border-neutral-200 p-3 flex items-center gap-2">
-                  <button className="shrink-0 p-2 text-neutral-500 hover:text-brand-primary" aria-label="Attach">
+                <div className="border-t border-line p-3 flex items-center gap-2 bg-white">
+                  <button
+                    className="shrink-0 w-9 h-9 inline-flex items-center justify-center rounded-md text-ink-muted hover:bg-canvas-subtle hover:text-ink transition-colors"
+                    aria-label="Attach"
+                  >
                     <Paperclip className="w-4 h-4" />
                   </button>
                   <Input
@@ -223,15 +247,26 @@ export default function MessagesPage() {
                         sendMessage();
                       }
                     }}
-                    placeholder="Type a message..."
+                    placeholder="Type a message…"
                   />
-                  <Button onClick={sendMessage}>
+                  <button
+                    onClick={sendMessage}
+                    disabled={!input.trim()}
+                    className="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-md bg-brand-primary text-white hover:bg-brand-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Send"
+                  >
                     <Send className="w-4 h-4" />
-                  </Button>
+                  </button>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">Select a conversation</div>
+              <div className="flex-1 flex flex-col items-center justify-center text-ink-subtle text-sm">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <p className="font-medium text-ink">Select a conversation</p>
+                <p className="text-xs mt-1">Pick someone from the list to start chatting.</p>
+              </div>
             )}
           </section>
         </div>
