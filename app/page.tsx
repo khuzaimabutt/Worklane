@@ -73,23 +73,25 @@ export default async function HomePage() {
               Browse services from verified professionals. Quality work, transparent pricing, secure payments.
             </p>
             <form action="/search" className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 mb-6">
-              <input
-                name="q"
-                placeholder="What service are you looking for today?"
-                className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
-              />
-              <button className="btn-cta whitespace-nowrap inline-flex items-center gap-2">
-                <Search className="w-4 h-4" />
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
+                <input
+                  name="q"
+                  placeholder="What service are you looking for today?"
+                  className="w-full h-12 pl-10 pr-4 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
+                />
+              </div>
+              <button className="btn-cta whitespace-nowrap">
                 Search
               </button>
             </form>
-            <div className="flex flex-wrap justify-center gap-2 text-xs text-neutral-600">
-              <span>Popular:</span>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mr-1">Popular</span>
               {["Web Design", "Logo Design", "Bubble.io", "React Native", "AI Integration"].map((t) => (
                 <Link
                   key={t}
                   href={`/search?q=${encodeURIComponent(t)}`}
-                  className="bg-white border border-neutral-200 px-3 py-1 rounded-full hover:border-brand-primary hover:text-brand-primary transition"
+                  className="inline-flex items-center h-7 px-3 rounded-full bg-white border border-line-strong text-xs font-medium text-ink-muted hover:border-brand-primary hover:text-brand-primary-dark hover:bg-brand-primary-50 transition-colors"
                 >
                   {t}
                 </Link>
@@ -212,19 +214,38 @@ export default async function HomePage() {
           </section>
         )}
 
-        <section className="bg-brand-primary text-white py-20">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="font-heading text-4xl md:text-5xl mb-4">Turn Your Skills Into Income</h2>
-            <p className="text-white/85 text-lg mb-8">
-              Join thousands of professionals earning on SkillBazaar — no upfront cost, no monthly fees.
-            </p>
-            <Link href="/become-seller" className="inline-block btn-cta">
-              Start Selling Today
-            </Link>
-            <div className="mt-10 grid grid-cols-3 gap-6 text-sm">
-              <Trust icon={<ShieldCheck />} title="Secure Escrow" />
-              <Trust icon={<Clock />} title="On-time Delivery" />
-              <Trust icon={<CheckCircle2 />} title="Verified Reviews" />
+        <section className="py-16 sm:py-20">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F4845] via-[#0F766E] to-[#064E50] text-white px-6 sm:px-10 py-14 sm:py-16">
+              <div
+                className="absolute inset-0 opacity-[0.12] pointer-events-none"
+                style={{
+                  backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
+                  backgroundSize: "28px 28px",
+                }}
+              />
+              <div className="relative max-w-2xl mx-auto text-center">
+                <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-50/80 mb-3">
+                  Start selling
+                </p>
+                <h2 className="font-heading text-3xl sm:text-4xl text-white text-balance leading-tight mb-3">
+                  Turn your skills into income.
+                </h2>
+                <p className="text-white/80 text-base sm:text-lg mb-7 max-w-xl mx-auto text-balance">
+                  Join thousands of professionals earning on SkillBazaar — no upfront cost, no monthly fees.
+                </p>
+                <Link
+                  href="/become-seller"
+                  className="inline-flex items-center justify-center h-12 px-6 rounded-md bg-white text-ink font-semibold text-sm hover:bg-canvas-subtle transition-colors"
+                >
+                  Start selling today
+                </Link>
+                <div className="mt-10 grid grid-cols-3 gap-6 max-w-md mx-auto">
+                  <Trust icon={<ShieldCheck className="w-4 h-4" />} title="Escrow protected" />
+                  <Trust icon={<Clock className="w-4 h-4" />} title="On-time delivery" />
+                  <Trust icon={<CheckCircle2 className="w-4 h-4" />} title="Verified reviews" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -273,10 +294,10 @@ function FeeCard({
 function Trust({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center text-white">
+      <div className="w-9 h-9 rounded-full bg-white/10 ring-1 ring-white/15 flex items-center justify-center text-white/90">
         {icon}
       </div>
-      <span className="text-white/90">{title}</span>
+      <span className="text-xs text-white/75 font-medium text-center leading-tight">{title}</span>
     </div>
   );
 }
