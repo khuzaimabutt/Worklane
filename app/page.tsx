@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Clock,
   CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -23,6 +24,18 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Globe, Smartphone, Palette, Bot, TrendingUp, Briefcase,
 };
 
+type FeaturedGig = GigCardData;
+
+type TopSeller = {
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  seller_level: "new_seller" | "level_one" | "level_two" | "top_rated";
+  rating: number;
+  total_orders: number;
+  tagline: string | null;
+};
+
 async function loadHomeData() {
   try {
     const sb = createClient();
@@ -32,25 +45,84 @@ async function loadHomeData() {
       sb.from("users").select("id", { count: "exact", head: true }).eq("is_seller", true),
     ]);
 
-    const { data: featuredGigs } = await sb
+    const { data: gigRows } = await sb
       .from("gigs")
       .select("id, slug, title, thumbnail_url, average_rating, total_reviews, seller_id")
       .eq("status", "active")
       .order("total_orders", { ascending: false })
       .limit(8);
 
-    const { data: topSellers } = await sb
+    const { data: topSellerRows } = await sb
       .from("seller_profiles")
       .select("user_id, seller_level, average_rating, total_orders_completed, tagline")
       .order("average_rating", { ascending: false })
       .limit(4);
 
+    const sellerIdsForGigs = Array.from(new Set((gigRows ?? []).map((g: any) => g.seller_id)));
+    const sellerIdsForTop = (topSellerRows ?? []).map((s: any) => s.user_id);
+    const allSellerIds = Array.from(new Set([...sellerIdsForGigs, ...sellerIdsForTop]));
+    const gigIds = (gigRows ?? []).map((g: any) => g.id);
+
+    const [{ data: users }, { data: profiles }, { data: packages }] = await Promise.all([
+      allSellerIds.length > 0
+        ? sb.from("users").select("id, username, full_name, avatar_url").in("id", allSellerIds)
+        : Promise.resolve({ data: [] as any[] }),
+      sellerIdsForGigs.length > 0
+        ? sb.from("seller_profiles").select("user_id, seller_level").in("user_id", sellerIdsForGigs)
+        : Promise.resolve({ data: [] as any[] }),
+      gigIds.length > 0
+        ? sb.from("gig_packages").select("gig_id, price").in("gig_id", gigIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const userById = new Map((users ?? []).map((u: any) => [u.id, u]));
+    const profileById = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+    const minPriceByGig = new Map<string, number>();
+    for (const p of packages ?? []) {
+      const cur = minPriceByGig.get((p as any).gig_id);
+      const price = Number((p as any).price);
+      if (cur == null || price < cur) minPriceByGig.set((p as any).gig_id, price);
+    }
+
+    const featuredGigs: FeaturedGig[] = (gigRows ?? []).map((g: any) => {
+      const u = userById.get(g.seller_id) as any;
+      const p = profileById.get(g.seller_id) as any;
+      return {
+        id: g.id,
+        slug: g.slug,
+        title: g.title,
+        thumbnail_url: g.thumbnail_url,
+        average_rating: g.average_rating ?? 0,
+        total_reviews: g.total_reviews ?? 0,
+        starting_price: minPriceByGig.get(g.id) ?? 0,
+        seller: {
+          username: u?.username ?? "seller",
+          full_name: u?.full_name ?? "Seller",
+          avatar_url: u?.avatar_url ?? null,
+          seller_level: p?.seller_level ?? "new_seller",
+        },
+      };
+    });
+
+    const topSellers: TopSeller[] = (topSellerRows ?? []).map((s: any) => {
+      const u = userById.get(s.user_id) as any;
+      return {
+        username: u?.username ?? s.user_id,
+        full_name: u?.full_name ?? "Top Seller",
+        avatar_url: u?.avatar_url ?? null,
+        seller_level: s.seller_level,
+        rating: s.average_rating ?? 0,
+        total_orders: s.total_orders_completed ?? 0,
+        tagline: s.tagline ?? null,
+      };
+    });
+
     return {
       categories: parentCategories ?? [],
       activeGigs: activeGigs ?? 0,
       verifiedSellers: verifiedSellers ?? 0,
-      featuredGigs: featuredGigs ?? [],
-      topSellers: topSellers ?? [],
+      featuredGigs,
+      topSellers,
     };
   } catch {
     return { categories: [], activeGigs: 0, verifiedSellers: 0, featuredGigs: [], topSellers: [] };
@@ -64,12 +136,12 @@ export default async function HomePage() {
     <>
       <Navbar />
       <main>
-        <section className="hero-bg border-b border-neutral-200">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
-            <h1 className="font-heading text-5xl md:text-7xl leading-[1.05] mb-4 text-balance">
-              Find the Right Freelancer.<br className="hidden md:block" /> Get It Done.
+        <section className="hero-bg border-b border-line">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-ink leading-[1.05] tracking-tight mb-5 text-balance">
+              Find the right freelancer. Get it done.
             </h1>
-            <p className="text-neutral-600 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+            <p className="text-ink-muted text-base sm:text-lg mb-8 max-w-2xl mx-auto text-balance leading-relaxed">
               Browse services from verified professionals. Quality work, transparent pricing, secure payments.
             </p>
             <form action="/search" className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 mb-6">
@@ -78,10 +150,10 @@ export default async function HomePage() {
                 <input
                   name="q"
                   placeholder="What service are you looking for today?"
-                  className="w-full h-12 pl-10 pr-4 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
+                  className="w-full h-12 pl-10 pr-4 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary shadow-card"
                 />
               </div>
-              <button className="btn-cta whitespace-nowrap">
+              <button className="h-12 px-6 inline-flex items-center justify-center bg-brand-primary text-white rounded-md text-sm font-semibold hover:bg-brand-primary-dark transition-colors whitespace-nowrap">
                 Search
               </button>
             </form>
@@ -97,115 +169,130 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-3xl mx-auto">
-              <Stat number={`${data.activeGigs.toLocaleString()}+`} label="Active Gigs" />
-              <Stat number={`${data.verifiedSellers.toLocaleString()}+`} label="Verified Sellers" />
-              <Stat number="Escrow" label="Secure Payments" />
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-3xl mx-auto">
+              <Stat number={`${data.activeGigs.toLocaleString()}+`} label="Active gigs" />
+              <Stat number={`${data.verifiedSellers.toLocaleString()}+`} label="Verified sellers" />
+              <Stat number="Escrow" label="Secure payments" />
               <Stat number="24/7" label="Support" />
             </div>
           </div>
         </section>
 
-        <section className="py-16 border-b border-neutral-200">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="font-heading text-3xl md:text-4xl text-center mb-3">
-              Transparent Fees. No Surprises at Checkout.
-            </h2>
-            <p className="text-neutral-500 text-center mb-10 max-w-2xl mx-auto">
-              We believe in honest pricing — here&apos;s exactly what you pay and what sellers earn.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              <FeeCard
-                title="If you order $100"
-                paid="$105.50"
-                breakdown={[
-                  { label: "Service", amount: "$100.00" },
-                  { label: "Service fee (5.5%)", amount: "$5.50" },
-                ]}
-                accent="bg-brand-primary/5 border-brand-primary/20"
-              />
-              <FeeCard
-                title="If a seller receives $100"
-                paid="$80.00"
-                breakdown={[
-                  { label: "Order amount", amount: "$100.00" },
-                  { label: "Commission (20%)", amount: "−$20.00" },
-                ]}
-                accent="bg-brand-accent/5 border-brand-accent/20"
-              />
+        {data.categories.length > 0 && (
+          <section className="py-16 sm:py-20 border-b border-line">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
+                <h2 className="font-heading text-2xl sm:text-3xl text-ink">Explore services</h2>
+                <Link href="/search" className="text-sm font-medium text-brand-primary-dark hover:underline">
+                  Browse all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {data.categories.map((cat: any) => {
+                  const Icon = ICON_MAP[cat.icon_name] || Globe;
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/category/${cat.slug}`}
+                      className="group bg-white border border-line rounded-xl p-5 text-center transition-all hover:border-line-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                    >
+                      <div className="w-11 h-11 mx-auto mb-3 rounded-xl bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center transition-colors group-hover:bg-brand-primary group-hover:text-white">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <h3 className="font-semibold text-sm text-ink mb-0.5 truncate">{cat.name}</h3>
+                      <p className="text-xs text-ink-subtle">{cat.gig_count ?? 0} gigs</p>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <p className="text-xs text-neutral-500 text-center mt-6 max-w-2xl mx-auto">
-              The 20% seller commission funds platform security, payment protection, dispute resolution, and the team behind SkillBazaar.
-            </p>
-          </div>
-        </section>
+          </section>
+        )}
 
-        <section className="py-16 border-b border-neutral-200">
+        <section className="py-16 sm:py-20 border-b border-line">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="font-heading text-3xl md:text-4xl mb-8 text-center">Explore Services</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {data.categories.map((cat: any) => {
-                const Icon = ICON_MAP[cat.icon_name] || Globe;
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/category/${cat.slug}`}
-                    className="group bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-md hover:border-brand-primary transition-all"
-                  >
-                    <Icon className="w-8 h-8 text-brand-primary mb-3" />
-                    <h3 className="font-semibold text-neutral-900 mb-1">{cat.name}</h3>
-                    <p className="text-sm text-neutral-500">{cat.gig_count} gigs</p>
-                    <p className="text-sm text-brand-primary mt-2 opacity-0 group-hover:opacity-100 transition">
-                      Browse {cat.name} →
-                    </p>
-                  </Link>
-                );
-              })}
+            <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
+              <div>
+                <h2 className="font-heading text-2xl sm:text-3xl text-ink">Popular this week</h2>
+                <p className="text-sm text-ink-subtle mt-1">Top-rated gigs across every category.</p>
+              </div>
+              <Link href="/search?sort=best_selling" className="text-sm font-medium text-brand-primary-dark hover:underline shrink-0">
+                See all <ArrowRight className="w-3 h-3 inline -mt-0.5" />
+              </Link>
             </div>
-          </div>
-        </section>
-
-        <section className="py-16 border-b border-neutral-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="font-heading text-3xl md:text-4xl mb-8 text-center">Popular This Week</h2>
             {data.featuredGigs.length === 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {Array.from({ length: 4 }).map((_, i) => <GigCardSkeleton key={i} />)}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {data.featuredGigs.map((g: any) => {
-                  const card: GigCardData = {
-                    id: g.id,
-                    slug: g.slug,
-                    title: g.title,
-                    thumbnail_url: g.thumbnail_url,
-                    average_rating: g.average_rating || 0,
-                    total_reviews: g.total_reviews || 0,
-                    starting_price: 50,
-                    seller: { username: "seller", full_name: "Seller", avatar_url: null, seller_level: "new_seller" },
-                  };
-                  return <GigCard key={g.id} gig={card} />;
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {data.featuredGigs.map((g) => <GigCard key={g.id} gig={g} />)}
               </div>
             )}
           </div>
         </section>
 
+        <section className="py-16 sm:py-20 border-b border-line bg-canvas-subtle">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-10">
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-dark mb-3">Pricing</p>
+              <h2 className="font-heading text-2xl sm:text-3xl text-ink mb-2 text-balance">
+                Transparent fees. No surprises at checkout.
+              </h2>
+              <p className="text-sm sm:text-base text-ink-muted max-w-2xl mx-auto leading-relaxed">
+                Honest pricing — here&apos;s exactly what you pay and what sellers earn.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              <FeeCard
+                title="If you order"
+                base="$100"
+                paid="$105.50"
+                breakdown={[
+                  { label: "Service", amount: "$100.00" },
+                  { label: "Service fee (5.5%)", amount: "$5.50" },
+                ]}
+                accent="border-brand-primary/30 bg-white"
+                amountColor="text-brand-primary-dark"
+              />
+              <FeeCard
+                title="A seller receives"
+                base="from your $100"
+                paid="$80.00"
+                breakdown={[
+                  { label: "Order amount", amount: "$100.00" },
+                  { label: "Commission (20%)", amount: "−$20.00" },
+                ]}
+                accent="border-brand-accent/30 bg-white"
+                amountColor="text-brand-accent-dark"
+              />
+            </div>
+            <p className="text-xs text-ink-subtle text-center mt-6 max-w-2xl mx-auto leading-relaxed">
+              The 20% seller commission funds platform security, payment protection, dispute resolution,
+              and the team behind SkillBazaar.
+            </p>
+          </div>
+        </section>
+
         {data.topSellers.length > 0 && (
-          <section className="py-16 border-b border-neutral-200">
+          <section className="py-16 sm:py-20 border-b border-line">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <h2 className="font-heading text-3xl md:text-4xl mb-8 text-center">Our Top Sellers</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {data.topSellers.map((s: any) => (
+              <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
+                <div>
+                  <h2 className="font-heading text-2xl sm:text-3xl text-ink">Our top sellers</h2>
+                  <p className="text-sm text-ink-subtle mt-1">Highest-rated professionals on the platform.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {data.topSellers.map((s) => (
                   <SellerCard
-                    key={s.user_id}
-                    username={s.user_id}
-                    fullName="Top Seller"
-                    avatarUrl={null}
+                    key={s.username}
+                    username={s.username}
+                    fullName={s.full_name}
+                    avatarUrl={s.avatar_url}
                     level={s.seller_level}
-                    rating={s.average_rating || 0}
-                    totalOrders={s.total_orders_completed || 0}
+                    rating={s.rating}
+                    totalOrders={s.total_orders}
                     tagline={s.tagline}
                   />
                 ))}
@@ -258,32 +345,39 @@ export default async function HomePage() {
 function Stat({ number, label }: { number: string; label: string }) {
   return (
     <div>
-      <p className="font-heading text-3xl text-brand-primary">{number}</p>
-      <p className="text-xs text-neutral-500 mt-1">{label}</p>
+      <p className="font-heading text-2xl sm:text-3xl text-ink tabular-nums">{number}</p>
+      <p className="text-xs text-ink-subtle mt-1 uppercase tracking-wider font-medium">{label}</p>
     </div>
   );
 }
 
 function FeeCard({
   title,
+  base,
   paid,
   breakdown,
   accent,
+  amountColor,
 }: {
   title: string;
+  base: string;
   paid: string;
   breakdown: { label: string; amount: string }[];
   accent: string;
+  amountColor: string;
 }) {
   return (
-    <div className={`rounded-xl border p-6 ${accent}`}>
-      <p className="text-sm font-medium text-neutral-700 mb-2">{title}</p>
-      <p className="font-heading text-5xl mb-4">{paid}</p>
-      <div className="space-y-1 text-sm">
+    <div className={`rounded-2xl border-2 p-6 sm:p-7 ${accent}`}>
+      <div className="flex items-baseline justify-between gap-2 mb-1">
+        <p className="text-sm font-medium text-ink">{title}</p>
+        <p className="text-xs text-ink-subtle">{base}</p>
+      </div>
+      <p className={`font-heading text-4xl sm:text-5xl mb-5 tabular-nums tracking-tight ${amountColor}`}>{paid}</p>
+      <div className="space-y-2 text-sm pt-4 border-t border-line">
         {breakdown.map((b) => (
           <div key={b.label} className="flex justify-between">
-            <span className="text-neutral-600">{b.label}</span>
-            <span className="tabular-nums font-medium">{b.amount}</span>
+            <span className="text-ink-muted">{b.label}</span>
+            <span className="tabular-nums font-semibold text-ink">{b.amount}</span>
           </div>
         ))}
       </div>

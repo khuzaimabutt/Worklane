@@ -19,19 +19,25 @@ export function SellerCard({ username, fullName, avatarUrl, level, rating, total
   return (
     <Link
       href={`/seller/${username}`}
-      className="block bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-md hover:border-neutral-300 transition-all text-center"
+      className="group block bg-white border border-line rounded-xl p-5 text-center transition-all hover:border-line-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
     >
-      <Avatar className="w-20 h-20 mx-auto mb-3">
+      <Avatar className="w-20 h-20 mx-auto mb-3 border border-line">
         {avatarUrl && <AvatarImage src={avatarUrl} />}
-        <AvatarFallback className="text-xl">{initials(fullName)}</AvatarFallback>
+        <AvatarFallback className="text-xl bg-canvas-subtle text-ink-muted">
+          {initials(fullName)}
+        </AvatarFallback>
       </Avatar>
-      <h3 className="font-semibold text-neutral-900 mb-1">{fullName}</h3>
-      <SellerLevelBadge level={level} className="inline-block mb-2" />
-      {tagline && <p className="text-xs text-neutral-500 mb-3 line-clamp-2">{tagline}</p>}
-      <div className="flex items-center justify-center gap-2 text-xs">
+      <h3 className="font-heading text-sm text-ink mb-1 truncate group-hover:text-brand-primary-dark transition-colors">
+        {fullName}
+      </h3>
+      <div className="mb-2.5">
+        <SellerLevelBadge level={level} />
+      </div>
+      {tagline && <p className="text-xs text-ink-subtle leading-relaxed line-clamp-2 mb-3 min-h-[2.5rem]">{tagline}</p>}
+      <div className="flex items-center justify-center gap-1.5 text-xs pt-3 border-t border-line-subtle">
         <RatingStars value={rating} size={12} />
-        <span className="font-medium">{rating.toFixed(1)}</span>
-        <span className="text-neutral-500">· {totalOrders} orders</span>
+        <span className="font-semibold text-ink">{rating.toFixed(1)}</span>
+        <span className="text-ink-subtle">· {totalOrders} orders</span>
       </div>
     </Link>
   );
