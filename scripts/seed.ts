@@ -29,40 +29,40 @@ const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: 
 
 const PASSWORD = "Test1234!";
 
-// Avatars: randomuser.me — free for commercial use, real professional studio
-// headshots. Numbers picked for visual diversity across the demo seller set.
+// Avatars: licensed photos provided by the project owner, stored in
+// public/avatars/ and served as static assets from the same origin.
 const SELLERS = [
   {
     email: "ahmad@skillbazaar.test", username: "ahmaddev", full_name: "Ahmad Raza",
-    avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
+    avatar_url: "/avatars/ahmad.png",
     tagline: "Full-Stack Web & Mobile Developer | 5+ Years Experience",
     skills: ["React", "Node.js", "Bubble.io", "Next.js", "React Native"],
     seller_level: "top_rated", total_orders_completed: 147, average_rating: 4.9, total_earnings_lifetime: 23400.0,
   },
   {
     email: "sara@skillbazaar.test", username: "saradesigns", full_name: "Sara Khan",
-    avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
+    avatar_url: "/avatars/sara.jpeg",
     tagline: "UI/UX Designer & Brand Identity Specialist",
     skills: ["Figma", "Adobe XD", "Illustrator", "Brand Design"],
     seller_level: "level_two", total_orders_completed: 89, average_rating: 4.8, total_earnings_lifetime: 8900.0,
   },
   {
     email: "noor@skillbazaar.test", username: "nocodenoor", full_name: "Noor Fatima",
-    avatar_url: "https://randomuser.me/api/portraits/women/63.jpg",
+    avatar_url: "/avatars/noor.png",
     tagline: "Bubble.io & Webflow Expert | MVP Builder",
     skills: ["Bubble.io", "Webflow", "No-Code", "Airtable", "Zapier"],
     seller_level: "level_one", total_orders_completed: 34, average_rating: 4.7, total_earnings_lifetime: 3200.0,
   },
   {
     email: "ali@skillbazaar.test", username: "aibuilder_ali", full_name: "Ali Hassan",
-    avatar_url: "https://randomuser.me/api/portraits/men/85.jpg",
+    avatar_url: "/avatars/ali.png",
     tagline: "AI Integration & Automation Specialist",
     skills: ["OpenAI API", "Python", "n8n", "Make.com", "ChatGPT"],
     seller_level: "level_one", total_orders_completed: 28, average_rating: 4.6, total_earnings_lifetime: 2800.0,
   },
   {
     email: "usman@skillbazaar.test", username: "mobilemaster_usman", full_name: "Usman Malik",
-    avatar_url: "https://randomuser.me/api/portraits/men/19.jpg",
+    avatar_url: "/avatars/usman.png",
     tagline: "React Native & Flutter Developer | 100+ Apps Built",
     skills: ["React Native", "Flutter", "Firebase", "iOS", "Android"],
     seller_level: "level_two", total_orders_completed: 63, average_rating: 4.8, total_earnings_lifetime: 11200.0,
@@ -184,7 +184,7 @@ async function main() {
       email: "buyer@skillbazaar.test",
       full_name: "Demo Buyer",
       username: "demo_buyer",
-      avatar_url: "https://randomuser.me/api/portraits/women/22.jpg",
+      avatar_url: "/avatars/buyer.png",
       is_email_verified: true,
     });
   }
