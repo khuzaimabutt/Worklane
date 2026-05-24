@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, Menu, Search, Heart } from "lucide-react";
+import { Bell, Menu, Search, Heart, User as UserIcon, LayoutDashboard, MessageCircle, Settings, ShieldCheck, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import type { User } from "@/types/database.types";
@@ -168,14 +169,126 @@ export function Navbar() {
               </Link>
             </>
           )}
-          <button
-            className="lg:hidden w-9 h-9 inline-flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-canvas-subtle transition-colors"
-            aria-label="Menu"
-          >
-            <Menu className="w-[18px] h-[18px]" />
-          </button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                className="lg:hidden w-9 h-9 inline-flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-canvas-subtle transition-colors"
+                aria-label="Open menu"
+              >
+                <Menu className="w-[18px] h-[18px]" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="p-0 flex flex-col">
+              <div className="px-5 h-16 flex items-center border-b border-line">
+                <span className="text-xl font-semibold text-brand-primary tracking-tight">SkillBazaar</span>
+              </div>
+
+              <div className="p-5 border-b border-line">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+                  }}
+                  className="relative"
+                >
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search services…"
+                    className="w-full pl-9 pr-4 h-10 bg-canvas-subtle border border-transparent rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-colors"
+                  />
+                </form>
+              </div>
+
+              <nav className="flex-1 py-2">
+                <MobileNavLink href="/search" label="Browse" icon={<Search className="w-4 h-4" />} />
+                <MobileNavLink href="/how-it-works" label="How it works" icon={<UserIcon className="w-4 h-4" />} />
+                {!user?.is_seller && (
+                  <MobileNavLink href="/become-seller" label="Become a seller" icon={<ShieldCheck className="w-4 h-4" />} />
+                )}
+
+                {user && (
+                  <>
+                    <div className="my-2 border-t border-line" />
+                    <MobileNavLink href="/dashboard" label="Dashboard" icon={<LayoutDashboard className="w-4 h-4" />} />
+                    {user.is_seller && (
+                      <MobileNavLink href="/seller/dashboard" label="Seller dashboard" icon={<LayoutDashboard className="w-4 h-4" />} />
+                    )}
+                    <MobileNavLink href="/messages" label="Messages" icon={<MessageCircle className="w-4 h-4" />} />
+                    <MobileNavLink href="/favorites" label="Favorites" icon={<Heart className="w-4 h-4" />} />
+                    <MobileNavLink href="/settings" label="Settings" icon={<Settings className="w-4 h-4" />} />
+                    {user.is_admin && (
+                      <MobileNavLink href="/admin" label="Admin" icon={<ShieldCheck className="w-4 h-4" />} />
+                    )}
+                  </>
+                )}
+              </nav>
+
+              <div className="p-5 border-t border-line">
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="w-10 h-10 border border-line shrink-0">
+                        {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                        <AvatarFallback className="text-sm bg-canvas-subtle text-ink-muted">
+                          {initials(user.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-ink truncate">{user.full_name}</p>
+                        <p className="text-xs text-ink-subtle truncate">@{user.username}</p>
+                      </div>
+                    </div>
+                    <SheetClose asChild>
+                      <button
+                        onClick={signOut}
+                        className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-md border border-line-strong text-sm font-medium text-ink-muted hover:bg-canvas-subtle hover:text-ink transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </SheetClose>
+                  </>
+                ) : (
+                  <div className="flex gap-2">
+                    <SheetClose asChild>
+                      <Link
+                        href="/login"
+                        className="flex-1 h-10 inline-flex items-center justify-center rounded-md border border-line-strong text-sm font-medium text-ink hover:bg-canvas-subtle transition-colors"
+                      >
+                        Log in
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link
+                        href="/signup"
+                        className="flex-1 h-10 inline-flex items-center justify-center rounded-md bg-brand-primary text-white text-sm font-semibold hover:bg-brand-primary-dark transition-colors"
+                      >
+                        Join
+                      </Link>
+                    </SheetClose>
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
+  );
+}
+
+function MobileNavLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
+  return (
+    <SheetClose asChild>
+      <Link
+        href={href}
+        className="flex items-center gap-3 px-5 h-11 text-sm font-medium text-ink hover:bg-canvas-subtle transition-colors"
+      >
+        <span className="text-ink-subtle">{icon}</span>
+        {label}
+      </Link>
+    </SheetClose>
   );
 }

@@ -3,9 +3,10 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { GigCard, type GigCardData } from "@/components/gig/gig-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Search as SearchIcon, SlidersHorizontal, X } from "lucide-react";
+import { Search as SearchIcon, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { SortSelect } from "./sort-select";
+import { MobileFilterTrigger } from "./mobile-filter-trigger";
 
 export const revalidate = 0;
 
@@ -196,14 +197,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
           <div className="min-w-0">
             <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-line">
-              <button
-                type="button"
-                className="lg:hidden inline-flex items-center gap-2 h-9 px-3 rounded-md border border-line-strong bg-white text-sm font-medium text-ink-muted hover:bg-canvas-subtle"
-                aria-label="Open filters"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters{activeCount > 0 && ` (${activeCount})`}
-              </button>
+              <MobileFilterTrigger activeCount={activeCount}>
+                <FilterSidebar searchParams={searchParams} selectedLevels={selectedLevels} />
+              </MobileFilterTrigger>
               <div className="ml-auto">
                 <SortSelect defaultValue={sort} />
               </div>
