@@ -29,50 +29,73 @@ const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: 
 
 const PASSWORD = "Test1234!";
 
+// Avatars: randomuser.me — free for commercial use, real professional studio
+// headshots. Numbers picked for visual diversity across the demo seller set.
 const SELLERS = [
   {
     email: "ahmad@skillbazaar.test", username: "ahmaddev", full_name: "Ahmad Raza",
+    avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
     tagline: "Full-Stack Web & Mobile Developer | 5+ Years Experience",
     skills: ["React", "Node.js", "Bubble.io", "Next.js", "React Native"],
     seller_level: "top_rated", total_orders_completed: 147, average_rating: 4.9, total_earnings_lifetime: 23400.0,
   },
   {
     email: "sara@skillbazaar.test", username: "saradesigns", full_name: "Sara Khan",
+    avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
     tagline: "UI/UX Designer & Brand Identity Specialist",
     skills: ["Figma", "Adobe XD", "Illustrator", "Brand Design"],
     seller_level: "level_two", total_orders_completed: 89, average_rating: 4.8, total_earnings_lifetime: 8900.0,
   },
   {
     email: "noor@skillbazaar.test", username: "nocodenoor", full_name: "Noor Fatima",
+    avatar_url: "https://randomuser.me/api/portraits/women/63.jpg",
     tagline: "Bubble.io & Webflow Expert | MVP Builder",
     skills: ["Bubble.io", "Webflow", "No-Code", "Airtable", "Zapier"],
     seller_level: "level_one", total_orders_completed: 34, average_rating: 4.7, total_earnings_lifetime: 3200.0,
   },
   {
     email: "ali@skillbazaar.test", username: "aibuilder_ali", full_name: "Ali Hassan",
+    avatar_url: "https://randomuser.me/api/portraits/men/85.jpg",
     tagline: "AI Integration & Automation Specialist",
     skills: ["OpenAI API", "Python", "n8n", "Make.com", "ChatGPT"],
     seller_level: "level_one", total_orders_completed: 28, average_rating: 4.6, total_earnings_lifetime: 2800.0,
   },
   {
     email: "usman@skillbazaar.test", username: "mobilemaster_usman", full_name: "Usman Malik",
+    avatar_url: "https://randomuser.me/api/portraits/men/19.jpg",
     tagline: "React Native & Flutter Developer | 100+ Apps Built",
     skills: ["React Native", "Flutter", "Firebase", "iOS", "Android"],
     seller_level: "level_two", total_orders_completed: 63, average_rating: 4.8, total_earnings_lifetime: 11200.0,
   },
 ];
 
+// Gig thumbnails: Unsplash photos matched to the service being sold. These
+// show the WORK, not the seller's face. URLs use the Unsplash CDN with size
+// + auto-format + crop parameters for consistent rendering at 5:3 aspect.
+const unsplash = (id: string) =>
+  `https://images.unsplash.com/${id}?w=800&h=480&q=80&auto=format&fit=crop`;
+
 const GIGS = [
-  { seller: "ahmaddev", category: "11111111-1111-1111-1111-111111111111", title: "I will build a professional Bubble.io web app or MVP", prices: [150, 350, 600] },
-  { seller: "ahmaddev", category: "11111111-1111-1111-1111-111111111111", title: "I will create a full-stack Next.js web application", prices: [200, 450, 800] },
-  { seller: "mobilemaster_usman", category: "22222222-2222-2222-2222-222222222222", title: "I will create a React Native mobile app for iOS and Android", prices: [200, 500, 900] },
-  { seller: "mobilemaster_usman", category: "22222222-2222-2222-2222-222222222222", title: "I will build a Flutter cross-platform mobile app", prices: [250, 550, 950] },
-  { seller: "saradesigns", category: "33333333-3333-3333-3333-333333333333", title: "I will design a modern UI/UX for your web or mobile app", prices: [75, 150, 300] },
-  { seller: "saradesigns", category: "33333333-3333-3333-3333-333333333333", title: "I will create a stunning logo and brand identity", prices: [50, 120, 250] },
-  { seller: "aibuilder_ali", category: "44444444-4444-4444-4444-444444444444", title: "I will integrate OpenAI ChatGPT into your application", prices: [100, 250, 450] },
-  { seller: "aibuilder_ali", category: "44444444-4444-4444-4444-444444444444", title: "I will build a custom AI chatbot for your business", prices: [150, 400, 700] },
-  { seller: "nocodenoor", category: "11111111-1111-1111-1111-111111111111", title: "I will build your Bubble.io MVP in 14 days", prices: [200, 500, 1000] },
-  { seller: "nocodenoor", category: "11111111-1111-1111-1111-111111111111", title: "I will design and build a Webflow website", prices: [180, 400, 750] },
+  { seller: "ahmaddev", category: "11111111-1111-1111-1111-111111111111", title: "I will build a professional Bubble.io web app or MVP", prices: [150, 350, 600],
+    thumb: unsplash("photo-1551288049-bebda4e38f71") /* dashboard on laptop */ },
+  { seller: "ahmaddev", category: "11111111-1111-1111-1111-111111111111", title: "I will create a full-stack Next.js web application", prices: [200, 450, 800],
+    thumb: unsplash("photo-1555066931-4365d14bab8c") /* code editor */ },
+  { seller: "mobilemaster_usman", category: "22222222-2222-2222-2222-222222222222", title: "I will create a React Native mobile app for iOS and Android", prices: [200, 500, 900],
+    thumb: unsplash("photo-1512941937669-90a1b58e7e9c") /* phone in hand */ },
+  { seller: "mobilemaster_usman", category: "22222222-2222-2222-2222-222222222222", title: "I will build a Flutter cross-platform mobile app", prices: [250, 550, 950],
+    thumb: unsplash("photo-1611078489935-0cb964de46d6") /* mobile mockups */ },
+  { seller: "saradesigns", category: "33333333-3333-3333-3333-333333333333", title: "I will design a modern UI/UX for your web or mobile app", prices: [75, 150, 300],
+    thumb: unsplash("photo-1559028012-481c04fa702d") /* Figma-style UI */ },
+  { seller: "saradesigns", category: "33333333-3333-3333-3333-333333333333", title: "I will create a stunning logo and brand identity", prices: [50, 120, 250],
+    thumb: unsplash("photo-1626785774573-4b799315345d") /* branding mockup */ },
+  { seller: "aibuilder_ali", category: "44444444-4444-4444-4444-444444444444", title: "I will integrate OpenAI ChatGPT into your application", prices: [100, 250, 450],
+    thumb: unsplash("photo-1677442136019-21780ecad995") /* AI / abstract */ },
+  { seller: "aibuilder_ali", category: "44444444-4444-4444-4444-444444444444", title: "I will build a custom AI chatbot for your business", prices: [150, 400, 700],
+    thumb: unsplash("photo-1620712943543-bcc4688e7485") /* chatbot UI */ },
+  { seller: "nocodenoor", category: "11111111-1111-1111-1111-111111111111", title: "I will build your Bubble.io MVP in 14 days", prices: [200, 500, 1000],
+    thumb: unsplash("photo-1559136555-9303baea8ebd") /* MVP sketch */ },
+  { seller: "nocodenoor", category: "11111111-1111-1111-1111-111111111111", title: "I will design and build a Webflow website", prices: [180, 400, 750],
+    thumb: unsplash("photo-1467232004584-a241de8bcf5d") /* website on screen */ },
 ];
 
 async function main() {
@@ -124,6 +147,7 @@ async function main() {
         email: s.email,
         full_name: s.full_name,
         username: s.username,
+        avatar_url: s.avatar_url,
         is_seller: true,
         is_email_verified: true,
       });
@@ -160,6 +184,7 @@ async function main() {
       email: "buyer@skillbazaar.test",
       full_name: "Demo Buyer",
       username: "demo_buyer",
+      avatar_url: "https://randomuser.me/api/portraits/women/22.jpg",
       is_email_verified: true,
     });
   }
@@ -180,7 +205,7 @@ async function main() {
       description: `<p>${g.title}. I bring years of experience and a track record of happy clients. Here's what you get:</p><ul><li>Clear communication throughout the project</li><li>Fast turnaround</li><li>Quality work that matches the brief</li><li>Free post-delivery support</li></ul>`,
       short_description: g.title.slice(0, 150),
       tags: g.title.split(" ").filter((w) => w.length > 3).slice(0, 5),
-      thumbnail_url: `https://i.pravatar.cc/600?img=${Math.floor(Math.random() * 70)}`,
+      thumbnail_url: g.thumb,
       status: "active",
       total_orders: Math.floor(Math.random() * 100),
       total_reviews: Math.floor(Math.random() * 80),

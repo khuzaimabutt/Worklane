@@ -12,7 +12,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "i.pravatar.cc",
+        hostname: "randomuser.me",
       },
       {
         protocol: "https",
