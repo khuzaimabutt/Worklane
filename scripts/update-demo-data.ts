@@ -29,12 +29,12 @@ if (!SUPABASE_URL || !SERVICE_ROLE || SUPABASE_URL.includes("placeholder")) {
 const sb = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
 
 const AVATARS: Array<{ email: string; avatar_url: string }> = [
-  { email: "ahmad@skillbazaar.test", avatar_url: "/avatars/ahmad.png" },
-  { email: "sara@skillbazaar.test", avatar_url: "/avatars/sara.jpeg" },
-  { email: "noor@skillbazaar.test", avatar_url: "/avatars/noor.png" },
-  { email: "ali@skillbazaar.test", avatar_url: "/avatars/ali.png" },
-  { email: "usman@skillbazaar.test", avatar_url: "/avatars/usman.png" },
-  { email: "buyer@skillbazaar.test", avatar_url: "/avatars/buyer.png" },
+  { email: "ahmad@worklane.test", avatar_url: "/avatars/ahmad.png" },
+  { email: "sara@worklane.test", avatar_url: "/avatars/sara.jpeg" },
+  { email: "noor@worklane.test", avatar_url: "/avatars/noor.png" },
+  { email: "ali@worklane.test", avatar_url: "/avatars/ali.png" },
+  { email: "usman@worklane.test", avatar_url: "/avatars/usman.png" },
+  { email: "buyer@worklane.test", avatar_url: "/avatars/buyer.png" },
 ];
 
 const unsplash = (id: string) =>

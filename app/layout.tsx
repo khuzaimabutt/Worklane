@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "SkillBazaar — Find the Right Freelancer. Get It Done.",
+  title: "Worklane — Find the Right Freelancer. Get It Done.",
   description: "Browse services from verified professionals. Quality work, transparent pricing, secure payments.",
 };
 

@@ -56,9 +56,9 @@ npm run dev
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@skillbazaar.test` | `Test1234!` |
-| Seller | `ahmad@skillbazaar.test` | `Test1234!` |
-| Buyer | `buyer@skillbazaar.test` | `Test1234!` |
+| Admin | `admin@worklane.test` | `Test1234!` |
+| Seller | `ahmad@worklane.test` | `Test1234!` |
+| Buyer | `buyer@worklane.test` | `Test1234!` |
 
 Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
