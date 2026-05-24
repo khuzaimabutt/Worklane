@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight, Clock, RotateCcw, ShieldCheck, Heart, Share2, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -9,9 +8,10 @@ import { SellerLevelBadge } from "@/components/seller/seller-level-badge";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { OrderCard } from "@/components/gig/order-card";
 import { StickyMobileCTA } from "@/components/gig/sticky-mobile-cta";
+import { GigGallery } from "@/components/gig/gig-gallery";
 import { ReviewsSection } from "@/components/gig/reviews-section";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney, initials, isOnline } from "@/lib/utils/format";
+import { initials, isOnline } from "@/lib/utils/format";
 
 export const revalidate = 60;
 
@@ -84,15 +84,12 @@ export default async function GigDetailPage({ params }: { params: { slug: string
               </div>
             </div>
 
-            <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-canvas-subtle border border-line">
-              {gig.thumbnail_url ? (
-                <Image src={gig.thumbnail_url} alt={gig.title} fill className="object-cover" priority />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-ink-faint text-5xl font-semibold tracking-tight">
-                  SkillBazaar
-                </div>
-              )}
-            </div>
+            <GigGallery
+              thumbnail={gig.thumbnail_url}
+              images={(gig.gallery_images as string[] | null) ?? []}
+              title={gig.title}
+            />
+
 
             <section className="bg-white border border-line rounded-2xl p-6 sm:p-7">
               <h2 className="font-heading text-lg text-ink mb-4">About this gig</h2>
