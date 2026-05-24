@@ -1,8 +1,8 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/gig/gig-card";
+import { GigCard, type GigCardData } from "@/components/gig/gig-card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 300;
@@ -45,35 +45,67 @@ async function searchGigs(params: SearchParams) {
   }
 }
 
+const SORT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "relevance", label: "Relevance" },
+  { value: "best_selling", label: "Best selling" },
+  { value: "newest", label: "Newest" },
+  { value: "rating", label: "Top rated" },
+];
+
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const { gigs } = await searchGigs(searchParams);
   const q = searchParams.q ?? "";
+  const sort = searchParams.sort ?? "relevance";
 
   return (
     <>
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6">
-          <h1 className="font-heading text-3xl mb-1">
+          <h1 className="font-heading text-2xl sm:text-3xl text-ink mb-1">
             {q ? `Results for "${q}"` : "Browse all services"}
           </h1>
-          <p className="text-sm text-neutral-500">{gigs.length} services found</p>
+          <p className="text-sm text-ink-subtle">
+            {gigs.length} {gigs.length === 1 ? "service" : "services"} available
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          <aside className="lg:col-span-1">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-6 lg:gap-8">
+          <aside className="lg:sticky lg:top-20 lg:self-start">
             <FilterSidebar />
           </aside>
 
-          <div className="lg:col-span-3">
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-line">
+              <button
+                className="lg:hidden inline-flex items-center gap-2 h-9 px-3 rounded-md border border-line-strong bg-white text-sm font-medium text-ink-muted hover:bg-canvas-subtle"
+                aria-label="Open filters"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+              </button>
+              <div className="flex items-center gap-2 ml-auto">
+                <label htmlFor="sort" className="text-sm text-ink-subtle">Sort by</label>
+                <select
+                  id="sort"
+                  defaultValue={sort}
+                  className="h-9 pl-3 pr-8 bg-white border border-line-strong rounded-md text-sm font-medium text-ink focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
+                >
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {gigs.length === 0 ? (
               <EmptyState
                 icon={<SearchIcon className="w-16 h-16" />}
                 title="No results found"
-                description={`We couldn't find any gigs matching "${q}". Try a different search or browse categories.`}
+                description={`We couldn't find any services matching "${q}". Try a different search or browse categories.`}
               />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {gigs.map((g: any) => {
                   const card: GigCardData = {
                     id: g.id,
@@ -97,57 +129,98 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   );
 }
 
+function FilterSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="py-4 border-t border-line first:border-t-0 first:pt-0">
+      <h3 className="text-xs font-semibold text-ink uppercase tracking-wider mb-3">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 function FilterSidebar() {
   return (
-    <div className="space-y-6 bg-white border border-neutral-200 rounded-xl p-5">
-      <div>
-        <h3 className="font-semibold text-sm mb-3">Price Range</h3>
+    <div className="bg-white border border-line rounded-xl p-5">
+      <FilterSection title="Price range">
         <div className="flex items-center gap-2">
-          <input placeholder="Min" className="min-w-0 flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
-          <span className="shrink-0 text-neutral-400">—</span>
-          <input placeholder="Max" className="min-w-0 flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary" />
+          <input
+            placeholder="Min"
+            inputMode="numeric"
+            className="min-w-0 flex-1 h-9 px-3 bg-white border border-line-strong rounded-md text-sm placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
+          />
+          <span className="shrink-0 text-ink-faint">–</span>
+          <input
+            placeholder="Max"
+            inputMode="numeric"
+            className="min-w-0 flex-1 h-9 px-3 bg-white border border-line-strong rounded-md text-sm placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
+          />
         </div>
-      </div>
-      <div>
-        <h3 className="font-semibold text-sm mb-3">Delivery Time</h3>
-        <div className="space-y-1.5 text-sm">
+      </FilterSection>
+
+      <FilterSection title="Delivery time">
+        <div className="space-y-2 text-sm">
           {["Any", "Within 24 hrs", "Up to 3 days", "Up to 7 days", "Up to 14 days"].map((label) => (
-            <label key={label} className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="delivery" className="text-brand-primary" />
+            <label key={label} className="flex items-center gap-2.5 cursor-pointer text-ink-muted hover:text-ink">
+              <input
+                type="radio"
+                name="delivery"
+                className="w-4 h-4 accent-brand-primary"
+              />
               <span>{label}</span>
             </label>
           ))}
         </div>
-      </div>
-      <div>
-        <h3 className="font-semibold text-sm mb-3">Seller Level</h3>
-        <div className="space-y-1.5 text-sm">
+      </FilterSection>
+
+      <FilterSection title="Seller level">
+        <div className="space-y-2 text-sm">
           {[
-            { label: "New Seller", color: "#6B7280" },
-            { label: "Level One", color: "#3B82F6" },
-            { label: "Level Two", color: "#8B5CF6" },
-            { label: "Top Rated", color: "#F59E0B" },
+            { label: "New Seller", dot: "bg-ink-faint" },
+            { label: "Level One", dot: "bg-brand-primary" },
+            { label: "Level Two", dot: "bg-brand-primary-dark" },
+            { label: "Top Rated", dot: "bg-amber-600" },
           ].map((l) => (
-            <label key={l.label} className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" className="text-brand-primary" />
-              <span className="inline-block w-2 h-2 rounded-full" style={{ background: l.color }} />
+            <label key={l.label} className="flex items-center gap-2.5 cursor-pointer text-ink-muted hover:text-ink">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-brand-primary"
+              />
+              <span className={`inline-block w-2 h-2 rounded-full ${l.dot}`} />
               <span>{l.label}</span>
             </label>
           ))}
         </div>
-      </div>
-      <div>
-        <h3 className="font-semibold text-sm mb-3">Minimum Rating</h3>
-        <div className="space-y-1.5 text-sm">
+      </FilterSection>
+
+      <FilterSection title="Minimum rating">
+        <div className="space-y-2 text-sm">
           {["Any rating", "4.5 & up", "4.0 & up", "3.5 & up"].map((label) => (
-            <label key={label} className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="rating" className="text-brand-primary" />
+            <label key={label} className="flex items-center gap-2.5 cursor-pointer text-ink-muted hover:text-ink">
+              <input
+                type="radio"
+                name="rating"
+                className="w-4 h-4 accent-brand-primary"
+              />
               <span>{label}</span>
             </label>
           ))}
         </div>
+      </FilterSection>
+
+      <div className="pt-4 border-t border-line flex gap-2">
+        <button className="flex-1 h-10 inline-flex items-center justify-center bg-brand-primary text-white rounded-md text-sm font-medium hover:bg-brand-primary-dark transition-colors">
+          Apply
+        </button>
+        <button className="h-10 px-4 inline-flex items-center justify-center bg-white border border-line-strong text-ink-muted rounded-md text-sm font-medium hover:bg-canvas-subtle transition-colors">
+          Clear
+        </button>
       </div>
-      <button className="w-full btn-primary text-sm">Apply Filters</button>
     </div>
   );
 }
