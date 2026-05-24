@@ -29,14 +29,44 @@ export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [query, setQuery] = useState("");
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     const sb = createClient();
-    sb.auth.getUser().then(async ({ data: { user: authUser } }) => {
+    let convChannel: ReturnType<typeof sb.channel> | null = null;
+
+    (async () => {
+      const { data: { user: authUser } } = await sb.auth.getUser();
       if (!authUser) return;
       const { data } = await sb.from("users").select("*").eq("id", authUser.id).single();
       setUser((data as User) ?? null);
-    });
+
+      async function refreshUnread() {
+        const { data: convs } = await sb
+          .from("conversations")
+          .select("buyer_id, seller_id, buyer_unread_count, seller_unread_count")
+          .or(`buyer_id.eq.${authUser!.id},seller_id.eq.${authUser!.id}`);
+        const total = (convs ?? []).reduce((sum, c) => {
+          const isBuyer = c.buyer_id === authUser!.id;
+          return sum + (isBuyer ? c.buyer_unread_count : c.seller_unread_count);
+        }, 0);
+        setUnread(total);
+      }
+
+      await refreshUnread();
+      convChannel = sb
+        .channel("nav-conv-unread")
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "conversations" },
+          () => { refreshUnread(); }
+        )
+        .subscribe();
+    })();
+
+    return () => {
+      if (convChannel) sb.removeChannel(convChannel);
+    };
   }, []);
 
   async function signOut() {
@@ -112,10 +142,15 @@ export function Navbar() {
               </Link>
               <Link
                 href="/messages"
-                aria-label="Messages"
+                aria-label={unread > 0 ? `Messages (${unread} unread)` : "Messages"}
                 className="relative w-9 h-9 inline-flex items-center justify-center rounded-md text-ink-muted hover:text-ink hover:bg-canvas-subtle transition-colors"
               >
                 <Bell className="w-[18px] h-[18px]" />
+                {unread > 0 && (
+                  <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded-full bg-error text-white text-[10px] font-semibold leading-none ring-2 ring-white">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
               </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

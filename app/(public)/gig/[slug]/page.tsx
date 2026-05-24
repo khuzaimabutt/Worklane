@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SellerLevelBadge } from "@/components/seller/seller-level-badge";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { OrderCard } from "@/components/gig/order-card";
+import { StickyMobileCTA } from "@/components/gig/sticky-mobile-cta";
 import { ReviewsSection } from "@/components/gig/reviews-section";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, initials, isOnline } from "@/lib/utils/format";
@@ -34,7 +35,7 @@ export default async function GigDetailPage({ params }: { params: { slug: string
   return (
     <>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 lg:pb-8">
         <nav aria-label="Breadcrumb" className="text-xs text-ink-subtle mb-5 flex items-center gap-1.5 flex-wrap">
           <Link href="/" className="hover:text-ink transition-colors">Home</Link>
           {category && (
@@ -195,6 +196,7 @@ export default async function GigDetailPage({ params }: { params: { slug: string
           </div>
         </div>
       </main>
+      <StickyMobileCTA gigId={gig.id} packages={packages as any} />
       <Footer />
     </>
   );

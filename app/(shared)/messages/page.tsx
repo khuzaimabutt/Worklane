@@ -17,6 +17,8 @@ interface Conversation {
   seller_id: string;
   last_message_at: string | null;
   last_message_preview: string | null;
+  buyer_unread_count: number;
+  seller_unread_count: number;
   other_user: { id: string; full_name: string; avatar_url: string | null; username: string };
 }
 
@@ -75,11 +77,20 @@ export default function MessagesPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !userId) return;
     const sb = createClient();
     (async () => {
       const { data } = await sb.from("messages").select("*").eq("conversation_id", active.id).order("created_at");
       setMessages(data ?? []);
+      // mark this conversation read for the current user
+      const isBuyer = active.buyer_id === userId;
+      const field = isBuyer ? "buyer_unread_count" : "seller_unread_count";
+      if ((isBuyer ? active.buyer_unread_count : active.seller_unread_count) > 0) {
+        await sb.from("conversations").update({ [field]: 0 }).eq("id", active.id);
+        setConversations((prev) =>
+          prev.map((c) => (c.id === active.id ? { ...c, [field]: 0 } : c))
+        );
+      }
     })();
     const channel = sb
       .channel(`messages:${active.id}`)
@@ -156,36 +167,67 @@ export default function MessagesPage() {
                   <p className="text-xs text-ink-subtle">Your messages will appear here.</p>
                 </div>
               ) : (
-                conversations.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setActive(c)}
-                    className={cn(
-                      "w-full text-left px-4 py-3 border-b border-line-subtle flex gap-3 transition-colors",
-                      active?.id === c.id ? "bg-brand-primary-50" : "hover:bg-canvas-subtle"
-                    )}
-                  >
-                    <Avatar className="w-10 h-10 shrink-0 border border-line">
-                      {c.other_user.avatar_url && <AvatarImage src={c.other_user.avatar_url} />}
-                      <AvatarFallback className="text-xs bg-white text-ink-muted">
-                        {initials(c.other_user.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className={cn("text-sm font-semibold truncate", active?.id === c.id ? "text-brand-primary-dark" : "text-ink")}>
-                          {c.other_user.full_name}
+                conversations.map((c) => {
+                  const isBuyer = c.buyer_id === userId;
+                  const unread = isBuyer ? c.buyer_unread_count : c.seller_unread_count;
+                  const isUnread = unread > 0 && active?.id !== c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setActive(c)}
+                      className={cn(
+                        "w-full text-left px-4 py-3 border-b border-line-subtle flex gap-3 transition-colors relative",
+                        active?.id === c.id ? "bg-brand-primary-50" : "hover:bg-canvas-subtle"
+                      )}
+                    >
+                      {isUnread && (
+                        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-brand-primary" />
+                      )}
+                      <Avatar className="w-10 h-10 shrink-0 border border-line">
+                        {c.other_user.avatar_url && <AvatarImage src={c.other_user.avatar_url} />}
+                        <AvatarFallback className="text-xs bg-white text-ink-muted">
+                          {initials(c.other_user.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-0.5">
+                          <p
+                            className={cn(
+                              "text-sm truncate",
+                              active?.id === c.id
+                                ? "font-semibold text-brand-primary-dark"
+                                : isUnread
+                                  ? "font-semibold text-ink"
+                                  : "font-medium text-ink"
+                            )}
+                          >
+                            {c.other_user.full_name}
+                          </p>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {c.last_message_at && (
+                              <span className={cn("text-2xs", isUnread ? "text-brand-primary-dark font-semibold" : "text-ink-subtle")}>
+                                {fromNow(c.last_message_at)}
+                              </span>
+                            )}
+                            {isUnread && (
+                              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand-primary text-white text-2xs font-semibold leading-none">
+                                {unread > 9 ? "9+" : unread}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p
+                          className={cn(
+                            "text-xs truncate",
+                            isUnread ? "text-ink font-medium" : "text-ink-subtle"
+                          )}
+                        >
+                          {c.last_message_preview ?? "No messages yet"}
                         </p>
-                        {c.last_message_at && (
-                          <span className="text-2xs text-ink-subtle shrink-0">{fromNow(c.last_message_at)}</span>
-                        )}
                       </div>
-                      <p className="text-xs text-ink-subtle truncate">
-                        {c.last_message_preview ?? "No messages yet"}
-                      </p>
-                    </div>
-                  </button>
-                ))
+                    </button>
+                  );
+                })
               )}
             </div>
           </aside>
