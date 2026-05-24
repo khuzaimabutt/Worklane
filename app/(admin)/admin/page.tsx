@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { ArrowRight, Users, Package, AlertTriangle, ShoppingBag, AlertOctagon, TrendingUp, Mail } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/utils/format";
+import { cn } from "@/lib/utils/cn";
 
 export default async function AdminDashboardPage() {
   const sb = createClient();
@@ -28,30 +30,38 @@ export default async function AdminDashboardPage() {
     <>
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="font-heading text-3xl mb-6">Admin Dashboard</h1>
+        <header className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mb-1">Admin</p>
+          <h1 className="font-heading text-2xl sm:text-3xl text-ink">Dashboard</h1>
+        </header>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Card label="Users" value={users?.toString() ?? "0"} />
-          <Card label="Active Gigs" value={activeGigs?.toString() ?? "0"} />
-          <Card label="Pending Gigs" value={pendingGigs?.toString() ?? "0"} accent={pendingGigs! > 0} />
-          <Card label="Total Orders" value={totalOrders?.toString() ?? "0"} />
-          <Card label="Open Disputes" value={openDisputes?.toString() ?? "0"} accent={openDisputes! > 0} />
-          <Card label="30-day Revenue" value={formatMoney(revenue)} />
+          <StatCard label="Users" value={users?.toString() ?? "0"} icon={<Users className="w-4 h-4" />} />
+          <StatCard label="Active gigs" value={activeGigs?.toString() ?? "0"} icon={<Package className="w-4 h-4" />} />
+          <StatCard label="Pending review" value={pendingGigs?.toString() ?? "0"} icon={<AlertTriangle className="w-4 h-4" />} accent={(pendingGigs ?? 0) > 0} />
+          <StatCard label="Orders" value={totalOrders?.toString() ?? "0"} icon={<ShoppingBag className="w-4 h-4" />} />
+          <StatCard label="Open disputes" value={openDisputes?.toString() ?? "0"} icon={<AlertOctagon className="w-4 h-4" />} accent={(openDisputes ?? 0) > 0} tone="danger" />
+          <StatCard label="30-day revenue" value={formatMoney(revenue)} icon={<TrendingUp className="w-4 h-4" />} />
         </div>
 
+        <h2 className="font-heading text-base text-ink mb-3">Queues</h2>
         <div className="grid md:grid-cols-3 gap-4">
-          <Link href="/admin/gigs/review" className="bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-sm transition">
-            <h3 className="font-semibold mb-1">Gigs to Review</h3>
-            <p className="text-3xl font-heading">{pendingGigs ?? 0}</p>
-          </Link>
-          <Link href="/admin/disputes" className="bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-sm transition">
-            <h3 className="font-semibold mb-1">Open Disputes</h3>
-            <p className="text-3xl font-heading">{openDisputes ?? 0}</p>
-          </Link>
-          <Link href="/admin/emails" className="bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-sm transition">
-            <h3 className="font-semibold mb-1">Email Logs</h3>
-            <p className="text-3xl font-heading">View</p>
-          </Link>
+          <NavCard
+            href="/admin/gigs/review"
+            title="Gigs to review"
+            value={pendingGigs ?? 0}
+            icon={<Package className="w-4 h-4" />}
+            urgent={(pendingGigs ?? 0) > 0}
+          />
+          <NavCard
+            href="/admin/disputes"
+            title="Open disputes"
+            value={openDisputes ?? 0}
+            icon={<AlertOctagon className="w-4 h-4" />}
+            urgent={(openDisputes ?? 0) > 0}
+            tone="danger"
+          />
+          <NavCard href="/admin/emails" title="Email logs" value="View" icon={<Mail className="w-4 h-4" />} />
         </div>
       </main>
       <Footer />
@@ -59,11 +69,80 @@ export default async function AdminDashboardPage() {
   );
 }
 
-function Card({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatCard({
+  label,
+  value,
+  icon,
+  accent,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  accent?: boolean;
+  tone?: "default" | "danger";
+}) {
+  const isDanger = tone === "danger" && accent;
   return (
-    <div className={`border rounded-xl p-4 ${accent ? "border-warning bg-warning/5" : "border-neutral-200 bg-white"}`}>
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="font-heading text-2xl mt-1">{value}</p>
+    <div
+      className={cn(
+        "rounded-2xl p-4 border",
+        isDanger
+          ? "bg-error/5 border-error/30"
+          : accent
+            ? "bg-amber-50 border-amber-200"
+            : "bg-white border-line"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center gap-2 mb-2 text-2xs uppercase tracking-wider font-semibold",
+          isDanger ? "text-error" : accent ? "text-amber-700" : "text-ink-subtle"
+        )}
+      >
+        <span>{icon}</span>
+        <span>{label}</span>
+      </div>
+      <p className={cn("font-heading text-xl sm:text-2xl tabular-nums", isDanger ? "text-error" : "text-ink")}>{value}</p>
     </div>
+  );
+}
+
+function NavCard({
+  href,
+  title,
+  value,
+  icon,
+  urgent,
+  tone,
+}: {
+  href: string;
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  urgent?: boolean;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group rounded-2xl p-5 border transition-all bg-white",
+        urgent && tone === "danger"
+          ? "border-error/30 hover:border-error"
+          : urgent
+            ? "border-amber-300 hover:border-amber-400"
+            : "border-line hover:border-line-strong hover:shadow-card-hover"
+      )}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className={cn("flex items-center gap-2 text-2xs uppercase tracking-wider font-semibold", urgent && tone === "danger" ? "text-error" : urgent ? "text-amber-700" : "text-ink-subtle")}>
+          <span>{icon}</span>
+          <span>{title}</span>
+        </div>
+        <ArrowRight className="w-4 h-4 text-ink-faint group-hover:text-ink group-hover:translate-x-0.5 transition-all" />
+      </div>
+      <p className={cn("font-heading text-2xl sm:text-3xl tabular-nums", urgent && tone === "danger" ? "text-error" : "text-ink")}>{value}</p>
+    </Link>
   );
 }

@@ -2,35 +2,37 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-neutral-200 bg-neutral-50">
+    <footer className="mt-auto border-t border-line bg-canvas-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <Col title="Platform">
-          <Link href="/about" className="block hover:text-brand-primary py-1">About</Link>
-          <Link href="/blog" className="block hover:text-brand-primary py-1">Blog</Link>
-          <Link href="/careers" className="block hover:text-brand-primary py-1">Careers</Link>
-          <Link href="/press" className="block hover:text-brand-primary py-1">Press</Link>
+          <FooterLink href="/about">About</FooterLink>
+          <FooterLink href="/blog">Blog</FooterLink>
+          <FooterLink href="/careers">Careers</FooterLink>
+          <FooterLink href="/press">Press</FooterLink>
         </Col>
         <Col title="Categories">
-          <Link href="/category/web-development" className="block hover:text-brand-primary py-1">Web Development</Link>
-          <Link href="/category/mobile-development" className="block hover:text-brand-primary py-1">Mobile Development</Link>
-          <Link href="/category/design-creative" className="block hover:text-brand-primary py-1">Design & Creative</Link>
-          <Link href="/category/ai-automation" className="block hover:text-brand-primary py-1">AI & Automation</Link>
+          <FooterLink href="/category/web-development">Web development</FooterLink>
+          <FooterLink href="/category/mobile-development">Mobile development</FooterLink>
+          <FooterLink href="/category/design-creative">Design &amp; creative</FooterLink>
+          <FooterLink href="/category/ai-automation">AI &amp; automation</FooterLink>
         </Col>
         <Col title="Support">
-          <Link href="/help" className="block hover:text-brand-primary py-1">Help Center</Link>
-          <Link href="/contact" className="block hover:text-brand-primary py-1">Contact</Link>
-          <Link href="/disputes" className="block hover:text-brand-primary py-1">Dispute Policy</Link>
+          <FooterLink href="/help">Help center</FooterLink>
+          <FooterLink href="/contact">Contact</FooterLink>
+          <FooterLink href="/how-it-works">How it works</FooterLink>
         </Col>
         <Col title="Legal">
-          <Link href="/privacy" className="block hover:text-brand-primary py-1">Privacy Policy</Link>
-          <Link href="/terms" className="block hover:text-brand-primary py-1">Terms of Service</Link>
-          <Link href="/cookies" className="block hover:text-brand-primary py-1">Cookie Policy</Link>
+          <FooterLink href="/privacy">Privacy policy</FooterLink>
+          <FooterLink href="/terms">Terms of service</FooterLink>
+          <FooterLink href="/cookies">Cookie policy</FooterLink>
         </Col>
       </div>
-      <div className="border-t border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between text-xs text-neutral-500">
+      <div className="border-t border-line">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-3 flex-wrap text-xs text-ink-subtle">
           <p>© {new Date().getFullYear()} SkillBazaar. All rights reserved.</p>
-          <p className="font-heading text-brand-primary text-base">SkillBazaar</p>
+          <Link href="/" className="text-base font-semibold text-brand-primary tracking-tight">
+            SkillBazaar
+          </Link>
         </div>
       </div>
     </footer>
@@ -40,8 +42,16 @@ export function Footer() {
 function Col({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="font-semibold text-neutral-900 mb-3">{title}</h4>
-      <div className="space-y-1 text-neutral-600">{children}</div>
+      <h4 className="text-2xs font-semibold uppercase tracking-wider text-ink-subtle mb-3">{title}</h4>
+      <div className="space-y-2 text-ink-muted">{children}</div>
     </div>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="block hover:text-brand-primary-dark transition-colors">
+      {children}
+    </Link>
   );
 }
