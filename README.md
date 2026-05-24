@@ -1,4 +1,4 @@
-# SkillBazaar — Freelance Services Marketplace
+# Worklane — Freelance Services Marketplace
 
 A production-grade freelance marketplace portfolio project. Browse services, place orders, message sellers, leave reviews, withdraw earnings — all running on a free-tier stack with no real charges.
 
