@@ -6,7 +6,6 @@ import {
   Bot,
   TrendingUp,
   Briefcase,
-  Search,
   ShieldCheck,
   Clock,
   CheckCircle2,
@@ -16,6 +15,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/gig/gig-card";
 import { SellerCard } from "@/components/seller/seller-card";
+import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 3600;
@@ -144,19 +144,9 @@ export default async function HomePage() {
             <p className="text-ink-muted text-base sm:text-lg mb-8 max-w-2xl mx-auto text-balance leading-relaxed">
               Browse services from verified professionals. Quality work, transparent pricing, secure payments.
             </p>
-            <form action="/search" className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 mb-6">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
-                <input
-                  name="q"
-                  placeholder="What service are you looking for today?"
-                  className="w-full h-12 pl-10 pr-4 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary shadow-card"
-                />
-              </div>
-              <button className="h-12 px-6 inline-flex items-center justify-center bg-brand-primary text-white rounded-md text-sm font-semibold hover:bg-brand-primary-dark transition-colors whitespace-nowrap">
-                Search
-              </button>
-            </form>
+            <div className="max-w-2xl mx-auto mb-6">
+              <SearchAutocomplete size="lg" placeholder="What service are you looking for today?" />
+            </div>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mr-1">Popular</span>
               {["Web Design", "Logo Design", "Bubble.io", "React Native", "AI Integration"].map((t) => (

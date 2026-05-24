@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart, Star } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SellerLevelBadge } from "@/components/seller/seller-level-badge";
 import { formatMoney, initials } from "@/lib/utils/format";
@@ -25,9 +27,53 @@ export interface GigCardData {
   };
 }
 
-export function GigCard({ gig, className }: { gig: GigCardData; className?: string }) {
-  const [fav, setFav] = useState(false);
+export function GigCard({
+  gig,
+  className,
+  initialFavorited = false,
+}: {
+  gig: GigCardData;
+  className?: string;
+  initialFavorited?: boolean;
+}) {
+  const router = useRouter();
+  const [fav, setFav] = useState(initialFavorited);
+  const [pending, setPending] = useState(false);
   const hasRating = gig.total_reviews > 0;
+
+  async function toggleFavorite(e: React.MouseEvent) {
+    e.preventDefault();
+    if (pending) return;
+    const prev = fav;
+    setFav(!prev);
+    setPending(true);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gig_id: gig.id }),
+      });
+      if (res.status === 401) {
+        setFav(prev);
+        toast.error("Sign in to save gigs", {
+          action: { label: "Sign in", onClick: () => router.push("/login?redirect=" + window.location.pathname) },
+        });
+        return;
+      }
+      if (!res.ok) {
+        setFav(prev);
+        toast.error("Couldn't update favorites");
+        return;
+      }
+      const data = await res.json();
+      setFav(Boolean(data.favorited));
+    } catch {
+      setFav(prev);
+      toast.error("Network error");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <Link
@@ -54,14 +100,13 @@ export function GigCard({ gig, className }: { gig: GigCardData; className?: stri
           </div>
         )}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            setFav(!fav);
-          }}
-          className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-sm w-8 h-8 rounded-full flex items-center justify-center shadow-card hover:bg-white transition-colors"
+          onClick={toggleFavorite}
+          disabled={pending}
+          className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-sm w-8 h-8 rounded-full flex items-center justify-center shadow-card hover:bg-white transition-colors disabled:opacity-60"
           aria-label={fav ? "Remove from favorites" : "Save to favorites"}
+          aria-pressed={fav}
         >
-          <Heart className={cn("w-4 h-4", fav ? "fill-error text-error" : "text-ink-muted")} />
+          <Heart className={cn("w-4 h-4 transition-colors", fav ? "fill-error text-error" : "text-ink-muted")} />
         </button>
       </div>
 

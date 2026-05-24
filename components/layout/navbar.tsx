@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, Menu, Search, Heart, User as UserIcon, LayoutDashboard, MessageCircle, Settings, ShieldCheck, LogOut } from "lucide-react";
+import { Bell, Menu, Heart, User as UserIcon, LayoutDashboard, MessageCircle, Settings, ShieldCheck, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,6 +15,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 import type { User } from "@/types/database.types";
@@ -28,7 +29,6 @@ export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
-  const [query, setQuery] = useState("");
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
@@ -76,11 +76,6 @@ export function Navbar() {
     router.refresh();
   }
 
-  function onSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-  }
-
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + "/");
 
   return (
@@ -93,17 +88,9 @@ export function Navbar() {
           SkillBazaar
         </Link>
 
-        <form onSubmit={onSearch} className="hidden md:flex flex-1 min-w-0 max-w-xl">
-          <div className="relative w-full min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="What service are you looking for?"
-              className="w-full pl-9 pr-4 h-10 bg-canvas-subtle border border-transparent rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-colors"
-            />
-          </div>
-        </form>
+        <div className="hidden md:block flex-1 min-w-0 max-w-xl">
+          <SearchAutocomplete placeholder="What service are you looking for?" />
+        </div>
 
         <nav className="hidden lg:flex items-center gap-1 text-sm shrink-0">
           {NAV_LINKS.map((l) => (
@@ -219,21 +206,7 @@ export function Navbar() {
               </div>
 
               <div className="p-5 border-b border-line">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-                  }}
-                  className="relative"
-                >
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-faint pointer-events-none" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search services…"
-                    className="w-full pl-9 pr-4 h-10 bg-canvas-subtle border border-transparent rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:bg-white focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 transition-colors"
-                  />
-                </form>
+                <SearchAutocomplete placeholder="Search services…" />
               </div>
 
               <nav className="flex-1 py-2">
