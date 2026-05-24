@@ -21,19 +21,33 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const sb = createClient();
-    const finalUsername = username || slugify(fullName).replace(/-/g, "_").slice(0, 30) || `user_${Date.now()}`;
-    const { error: err } = await sb.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, username: finalUsername },
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-      },
+
+    const finalUsername =
+      (username && username.trim()) ||
+      slugify(fullName).replace(/-/g, "_").slice(0, 30) ||
+      `user_${Date.now()}`;
+
+    // Server-side create (skips Supabase's email confirmation + rate limit).
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, fullName, username: finalUsername }),
     });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setLoading(false);
+      setError(data?.error ?? "Couldn't create your account. Please try again.");
+      return;
+    }
+
+    // Immediately sign in to establish a session.
+    const sb = createClient();
+    const { error: signInErr } = await sb.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (err) {
-      setError(err.message);
+    if (signInErr) {
+      // The account was created but sign-in failed (rare). Send them to /login.
+      router.push(`/login?redirect=/dashboard`);
       return;
     }
     router.push("/dashboard");
