@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/types/database.types";
 
 export const metadata: Metadata = {
-  title: "Worklane — Find the Right Freelancer. Get It Done.",
+  title: "Worklane | Find the right freelancer. Get it done.",
   description: "Browse services from verified professionals. Quality work, transparent pricing, secure payments.",
 };
 
@@ -31,7 +31,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen flex flex-col bg-white text-neutral-900">
+      <body className="antialiased min-h-screen flex flex-col bg-canvas text-ink">
         <UserProvider initialUser={user}>
           {children}
           <Toaster />

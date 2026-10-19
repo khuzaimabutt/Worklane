@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,50&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #F8F6F2;
-  --foreground: #111827;
+  --background: #F5F2EA;
+  --foreground: #15201C;
 
-  --brand-primary: #0D9488;
-  --brand-primary-dark: #0F766E;
-  --brand-accent: #F97316;
-  --brand-accent-dark: #EA6C0A;
+  --brand-primary: #0F5C4D;
+  --brand-primary-dark: #0A4539;
+  --brand-accent: #C2410C;
+  --brand-accent-dark: #9A3412;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html,
@@ -25,16 +26,34 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4, h5, h6,
+h1, h2, h3, h4, h5, h6 {
+  color: #15201C;
+  letter-spacing: -0.015em;
+}
+
+/* Type pairing: Inter for UI, Fraunces display serif for headings at text-xl and up. */
 .font-heading {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-weight: 600;
   letter-spacing: -0.015em;
-  color: #111827;
 }
 
-h1, .font-heading.text-3xl, .font-heading.text-4xl, .font-heading.text-5xl {
+.font-heading.text-xl, .font-heading.text-2xl, .font-heading.text-3xl,
+.font-heading.text-4xl, .font-heading.text-5xl, .font-heading.text-6xl, .font-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: "SOFT" 50, "opsz" 96;
+  font-weight: 500;
   letter-spacing: -0.025em;
+}
+
+:focus-visible {
+  outline: 2px solid #0F5C4D;
+  outline-offset: 2px;
+}
+
+.italic-accent {
+  font-style: italic;
+  color: #0F5C4D;
 }
 
 a {
@@ -43,8 +62,8 @@ a {
 }
 
 ::selection {
-  background: #CCFBF1;
-  color: #0F766E;
+  background: #D3E5DC;
+  color: #0A4539;
 }
 
 @layer utilities {
@@ -61,6 +80,9 @@ a {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.14em] text-brand-primary;
+  }
   .ring-focus {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
@@ -68,22 +90,22 @@ a {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-brand-primary text-white px-4 h-10 rounded-md text-sm font-medium hover:bg-brand-primary-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+    @apply inline-flex items-center justify-center gap-2 bg-brand-primary text-white px-4 h-10 rounded-full text-sm font-medium hover:bg-brand-primary-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-cta {
-    @apply inline-flex items-center justify-center gap-2 bg-brand-accent text-white px-5 h-11 rounded-md text-sm font-semibold hover:bg-brand-accent-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+    @apply inline-flex items-center justify-center gap-2 bg-brand-accent text-white px-5 h-11 rounded-full text-sm font-semibold hover:bg-brand-accent-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-white border border-line-strong text-ink px-4 h-10 rounded-md text-sm font-medium hover:bg-canvas-subtle hover:border-ink-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+    @apply inline-flex items-center justify-center gap-2 bg-white border border-line-strong text-ink px-4 h-10 rounded-full text-sm font-medium hover:bg-canvas-subtle hover:border-ink-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 text-ink-muted px-4 h-10 rounded-md text-sm font-medium hover:bg-ink/5 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+    @apply inline-flex items-center justify-center gap-2 text-ink-muted px-4 h-10 rounded-full text-sm font-medium hover:bg-ink/5 hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
   }
   .card-base {
     @apply bg-white border border-line rounded-xl;
   }
   .card-hover {
-    @apply transition-shadow hover:shadow-card-hover hover:border-line-strong;
+    @apply transition-all duration-300 hover:shadow-card-hover hover:border-line-strong hover:-translate-y-0.5;
   }
   .input-base {
     @apply w-full h-10 px-3 bg-white border border-line-strong rounded-md text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition-colors;
@@ -92,7 +114,7 @@ a {
     @apply inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border border-line-strong text-xs font-medium text-ink-muted hover:border-ink-faint transition-colors;
   }
   .chip-active {
-    @apply inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-primary text-white text-xs font-medium border border-brand-primary;
+    @apply inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-ink text-white text-xs font-medium border border-ink;
   }
   .section-divider {
     @apply border-t border-line;
@@ -100,13 +122,45 @@ a {
 }
 
 .hero-bg {
-  background-color: #F8F6F2;
-  background-image: radial-gradient(circle at 1px 1px, rgba(13, 148, 136, 0.06) 1px, transparent 0);
-  background-size: 32px 32px;
+  background-color: #F5F2EA;
+  background-image:
+    linear-gradient(to right, rgba(21, 32, 28, 0.045) 1px, transparent 1px);
+  background-size: 120px 100%;
+}
+
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.12 0 0 0 0 0.1 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.7s var(--ease-out) both; }
+.rise-1 { animation-delay: 0.06s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #EFEDE8 0%, #F8F6F2 50%, #EFEDE8 100%);
+  background: linear-gradient(90deg, #EEEAE0 0%, #F7F4EE 50%, #EEEAE0 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
