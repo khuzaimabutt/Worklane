@@ -438,10 +438,10 @@ export default async function HomePage() {
 }
 
 const STEPS = [
-  { icon: SearchIcon, t: "Pick a package", d: "Compare Basic, Standard and Premium side by side. Scope, revisions and delivery are fixed up front." },
-  { icon: MessageSquare, t: "Agree the details", d: "Message the seller or accept a custom offer. Share requirements once the order starts." },
-  { icon: ShieldCheck, t: "Pay into escrow", d: "Payment is held by the platform and released only when you accept the delivery." },
-  { icon: PackageCheck, t: "Review and approve", d: "Request a revision or approve the work. Leave a review, and add a tip if you like." },
+  { icon: <SearchIcon className="w-4 h-4" aria-hidden />, t: "Pick a package", d: "Compare Basic, Standard and Premium side by side. Scope, revisions and delivery are fixed up front." },
+  { icon: <MessageSquare className="w-4 h-4" aria-hidden />, t: "Agree the details", d: "Message the seller or accept a custom offer. Share requirements once the order starts." },
+  { icon: <ShieldCheck className="w-4 h-4" aria-hidden />, t: "Pay into escrow", d: "Payment is held by the platform and released only when you accept the delivery." },
+  { icon: <PackageCheck className="w-4 h-4" aria-hidden />, t: "Review and approve", d: "Request a revision or approve the work. Leave a review, and add a tip if you like." },
 ];
 
 function SectionHead({

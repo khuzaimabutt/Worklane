@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 export interface Step {
-  icon: LucideIcon;
+  icon: ReactNode;
   t: string;
   d: string;
 }
@@ -43,7 +43,7 @@ export function OrderSteps({ steps }: { steps: Step[] }) {
         <li key={step.t} className="relative rounded-2xl border border-line bg-white p-6">
           <div className="flex items-center justify-between mb-8">
             <span className="relative z-10 w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center">
-              <step.icon className="w-4 h-4" aria-hidden />
+              {step.icon}
             </span>
             <span className="font-display text-3xl text-line-strong tabular-nums" aria-hidden>
               {String(i + 1).padStart(2, "0")}
