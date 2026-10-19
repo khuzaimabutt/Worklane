@@ -10,15 +10,15 @@ interface Props {
 const styles: Record<SellerLevel, string> = {
   new_seller: "bg-canvas-subtle text-ink-subtle border-line",
   level_one: "bg-brand-primary-50 text-brand-primary-dark border-brand-primary/20",
-  level_two: "bg-brand-primary text-white border-brand-primary-dark",
-  top_rated: "bg-amber-50 text-amber-800 border-amber-200",
+  level_two: "bg-ink text-white border-ink",
+  top_rated: "bg-brand-accent-50 text-brand-accent-dark border-brand-accent/25",
 };
 
 const dots: Record<SellerLevel, string> = {
   new_seller: "bg-ink-faint",
   level_one: "bg-brand-primary",
   level_two: "bg-white",
-  top_rated: "bg-amber-600",
+  top_rated: "bg-brand-accent",
 };
 
 export function SellerLevelBadge({ level, className }: Props) {
