@@ -164,3 +164,85 @@ a {
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+
+/* ---------- Motion (transform and opacity only) ---------- */
+:root { --dur-fast: 200ms; --dur-base: 320ms; --dur-slow: 700ms; }
+
+/* Scroll reveal */
+.reveal { transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out); }
+.reveal-pre { opacity: 0; transform: translateY(14px); }
+.reveal-in { opacity: 1; transform: none; }
+
+/* Category card hover */
+.cat-card { transition: transform var(--dur-base) var(--ease-out), border-color var(--dur-fast) ease, box-shadow var(--dur-base) var(--ease-out); }
+.cat-card:hover, .cat-card:focus-visible { transform: translateY(-2px); box-shadow: 0 14px 30px -18px rgba(21, 32, 28, 0.3); }
+.cat-arrow { transition: transform var(--dur-base) var(--ease-out), color var(--dur-fast) ease; }
+.cat-card:hover .cat-arrow, .cat-card:focus-visible .cat-arrow { transform: translate(3px, -3px); }
+.cat-row { scrollbar-width: none; scroll-padding-left: 1rem; }
+.cat-row::-webkit-scrollbar { display: none; }
+
+/* Hero thumbnail fan */
+@keyframes fan-in {
+  from { opacity: 0; transform: translate(var(--fx), var(--fy)) rotate(0deg) scale(0.94); }
+  to { opacity: 1; transform: translate(0, 0) rotate(var(--r)) scale(1); }
+}
+@keyframes fan-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r)); }
+  50% { transform: translateY(-6px) rotate(var(--r)); }
+}
+.fan-card {
+  transform: rotate(var(--r));
+  animation:
+    fan-in 0.9s var(--ease-out) var(--d) both,
+    fan-float 7s ease-in-out calc(var(--d) + 0.9s + var(--fd)) infinite;
+  will-change: transform;
+}
+
+/* Gig card: seller row and price slide up a little */
+.gig-lift { transition: transform var(--dur-base) var(--ease-out); }
+.group:hover .gig-lift, .group:focus-visible .gig-lift { transform: translateY(-3px); }
+
+/* Package tabs: sliding underline */
+.tab-underline { transition: transform var(--dur-base) var(--ease-out); will-change: transform; }
+
+/* Price roll */
+@keyframes price-roll {
+  from { opacity: 0; transform: translateY(40%); }
+  to { opacity: 1; transform: none; }
+}
+.price-roll { display: inline-block; animation: price-roll var(--dur-base) var(--ease-out) both; }
+
+/* Header on scroll: soft shadow fades in, content eases in a touch. No height change. */
+.nav-shell::after {
+  content: ""; position: absolute; inset: auto 0 -1px 0; height: 1px; pointer-events: none;
+  box-shadow: 0 8px 24px -8px rgba(21, 32, 28, 0.3); opacity: 0; transition: opacity var(--dur-base) ease;
+}
+.nav-shell[data-scrolled="true"]::after { opacity: 1; }
+.nav-inner { transition: transform var(--dur-base) var(--ease-out); transform-origin: 50% 50%; }
+.nav-shell[data-scrolled="true"] .nav-inner { transform: scale(0.97); }
+
+/* Order steps: line draws left to right */
+.steps-line { transform-origin: left center; transition: transform 1.2s var(--ease-out); transform: scaleX(1); }
+.steps-line[data-drawn="false"] { transform: scaleX(0); }
+
+/* Messages */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.msg-in { animation: msg-in var(--dur-base) var(--ease-out) both; }
+@keyframes offer-pop {
+  0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+  60% { opacity: 1; transform: scale(1.03) translateY(0); }
+  100% { opacity: 1; transform: none; }
+}
+.offer-pop { animation: offer-pop 0.5s var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-pre { opacity: 1; transform: none; }
+  .fan-card { animation: none; opacity: 1; transform: rotate(var(--r)); }
+  .cat-card:hover, .cat-card:focus-visible, .group:hover .gig-lift, .nav-shell[data-scrolled="true"] .nav-inner { transform: none; }
+  .cat-card:hover .cat-arrow, .cat-card:focus-visible .cat-arrow { transform: none; }
+  .msg-in, .offer-pop, .price-roll { animation: none; }
+}

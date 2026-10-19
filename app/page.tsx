@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Clock,
   ArrowRight,
-  ArrowUpRight,
   Search as SearchIcon,
   MessageSquare,
   PackageCheck,
@@ -21,6 +20,10 @@ import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/gig/gig
 import { SellerCard } from "@/components/seller/seller-card";
 import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 import { createClient } from "@/lib/supabase/server";
+import { CategoryCard, type CategoryCardData } from "@/components/home/category-card";
+import { Reveal } from "@/components/home/reveal";
+import { CountUp } from "@/components/home/count-up";
+import { OrderSteps } from "@/components/home/order-steps";
 
 export const revalidate = 3600;
 
@@ -40,6 +43,20 @@ type TopSeller = {
   tagline: string | null;
 };
 
+const LEADING_VERBS = /^(build|create|design|develop|write|make|code|do|set up|setup|deliver|provide|integrate|convert|turn|fix|launch|be|craft|add|automate|optimize|optimise)\s+/i;
+const LEADING_ARTICLES = /^(a|an|the)\s+/i;
+
+/** "I will build a Flutter cross-platform mobile app" becomes "Flutter cross-platform mobile app". Words are only removed, never added. */
+function shortenTitle(title: string): string {
+  let t = title.trim().replace(/^i\s+will\s+/i, "").replace(LEADING_VERBS, "");
+  let prev = "";
+  while (prev !== t) {
+    prev = t;
+    t = t.replace(LEADING_ARTICLES, "");
+  }
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+}
+
 async function loadHomeData() {
   try {
     const sb = createClient();
@@ -47,6 +64,16 @@ async function loadHomeData() {
       sb.from("categories").select("*").is("parent_id", null).order("sort_order"),
       sb.from("gigs").select("id", { count: "exact", head: true }).eq("status", "active"),
       sb.from("users").select("id", { count: "exact", head: true }).eq("is_seller", true),
+    ]);
+
+    const [{ data: subCategories }, { data: activeRows }] = await Promise.all([
+      sb.from("categories").select("id, name, parent_id, sort_order, is_active").not("parent_id", "is", null).order("sort_order"),
+      sb
+        .from("gigs")
+        .select("id, title, category_id")
+        .eq("status", "active")
+        .order("total_orders", { ascending: false })
+        .order("title"),
     ]);
 
     const { data: gigRows } = await sb
@@ -65,7 +92,7 @@ async function loadHomeData() {
     const sellerIdsForGigs = Array.from(new Set((gigRows ?? []).map((g: any) => g.seller_id)));
     const sellerIdsForTop = (topSellerRows ?? []).map((s: any) => s.user_id);
     const allSellerIds = Array.from(new Set([...sellerIdsForGigs, ...sellerIdsForTop]));
-    const gigIds = (gigRows ?? []).map((g: any) => g.id);
+    const activeGigIds = (activeRows ?? []).map((g: any) => g.id);
 
     const [{ data: users }, { data: profiles }, { data: packages }] = await Promise.all([
       allSellerIds.length > 0
@@ -74,8 +101,8 @@ async function loadHomeData() {
       sellerIdsForGigs.length > 0
         ? sb.from("seller_profiles").select("user_id, seller_level").in("user_id", sellerIdsForGigs)
         : Promise.resolve({ data: [] as any[] }),
-      gigIds.length > 0
-        ? sb.from("gig_packages").select("gig_id, price").in("gig_id", gigIds)
+      activeGigIds.length > 0
+        ? sb.from("gig_packages").select("gig_id, price").in("gig_id", activeGigIds)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -87,6 +114,36 @@ async function loadHomeData() {
       const price = Number((p as any).price);
       if (cur == null || price < cur) minPriceByGig.set((p as any).gig_id, price);
     }
+
+    // Per-category numbers, all from the database: active gig count, cheapest package, example chips.
+    const parentOf = new Map<string, string>();
+    for (const sc of subCategories ?? []) parentOf.set((sc as any).id, (sc as any).parent_id);
+    const topIdOf = (id: string) => parentOf.get(id) ?? id;
+    const countByCat = new Map<string, number>();
+    const minPriceByCat = new Map<string, number>();
+    const titlesByCat = new Map<string, string[]>();
+    for (const g of activeRows ?? []) {
+      const cid = topIdOf((g as any).category_id);
+      countByCat.set(cid, (countByCat.get(cid) ?? 0) + 1);
+      const gp = minPriceByGig.get((g as any).id);
+      if (gp != null) minPriceByCat.set(cid, Math.min(minPriceByCat.get(cid) ?? Infinity, gp));
+      titlesByCat.set(cid, [...(titlesByCat.get(cid) ?? []), (g as any).title]);
+    }
+    const categoryCards: CategoryCardData[] = (parentCategories ?? []).map((c: any) => {
+      const subs = (subCategories ?? [])
+        .filter((sc: any) => sc.parent_id === c.id && sc.is_active !== false)
+        .slice(0, 3)
+        .map((sc: any) => sc.name as string);
+      const examples = (titlesByCat.get(c.id) ?? []).map(shortenTitle).filter(Boolean).slice(0, 2);
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        count: countByCat.get(c.id) ?? 0,
+        minPrice: minPriceByCat.get(c.id) ?? null,
+        chips: [...subs, ...examples.filter((e) => !subs.includes(e))].slice(0, 3),
+      };
+    });
 
     const featuredGigs: FeaturedGig[] = (gigRows ?? []).map((g: any) => {
       const u = userById.get(g.seller_id) as any;
@@ -123,13 +180,14 @@ async function loadHomeData() {
 
     return {
       categories: parentCategories ?? [],
+      categoryCards,
       activeGigs: activeGigs ?? 0,
       verifiedSellers: verifiedSellers ?? 0,
       featuredGigs,
       topSellers,
     };
   } catch {
-    return { categories: [], activeGigs: 0, verifiedSellers: 0, featuredGigs: [], topSellers: [] };
+    return { categories: [], categoryCards: [] as CategoryCardData[], activeGigs: 0, verifiedSellers: 0, featuredGigs: [], topSellers: [] };
   }
 }
 
@@ -174,16 +232,25 @@ export default async function HomePage() {
             </div>
 
             {heroGigs.length > 0 && (
-              <div className="relative hidden sm:block h-[420px] lg:h-[480px] rise rise-2" aria-hidden>
+              <div className="relative hidden sm:block h-[420px] lg:h-[480px]" aria-hidden>
                 {heroGigs.map((g, i) => (
                   <div
                     key={g.id}
                     className={[
-                      "absolute w-[62%] rounded-2xl bg-white p-1.5 shadow-card-hover border border-line",
-                      i === 0 ? "left-0 top-6 -rotate-3 z-10" : "",
-                      i === 1 ? "right-0 top-0 rotate-2 z-20" : "",
-                      i === 2 ? "left-[18%] bottom-0 rotate-1 z-30" : "",
+                      "fan-card absolute w-[62%] rounded-2xl bg-white p-1.5 shadow-card-hover border border-line",
+                      i === 0 ? "left-0 top-6 z-10" : "",
+                      i === 1 ? "right-0 top-0 z-20" : "",
+                      i === 2 ? "left-[18%] bottom-0 z-30" : "",
                     ].join(" ")}
+                    style={
+                      {
+                        "--r": ["-3deg", "2deg", "1deg"][i],
+                        "--fx": ["-48px", "48px", "0px"][i],
+                        "--fy": ["24px", "-24px", "48px"][i],
+                        "--d": `${0.15 + i * 0.14}s`,
+                        "--fd": `${i * 1.3}s`,
+                      } as React.CSSProperties
+                    }
                   >
                     <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-canvas">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -202,48 +269,63 @@ export default async function HomePage() {
           </div>
 
           <div className="border-t border-line bg-white/60">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
-              <Assurance icon={<ShieldCheck className="w-4 h-4" />} label="Funds held until delivery" />
-              <Assurance icon={<Clock className="w-4 h-4" />} label="Delivery date per package" />
-              <Assurance icon={<MessageSquare className="w-4 h-4" />} label="Custom offers in chat" />
-              <Assurance icon={<FlaskConical className="w-4 h-4" />} label="Demo: Stripe test mode" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3 lg:gap-x-10">
+                <Assurance icon={<ShieldCheck className="w-5 h-5" />} label="Funds held until delivery" />
+                <Assurance icon={<Clock className="w-5 h-5" />} label="Delivery date per package" />
+                <div className="col-span-2 sm:col-span-1">
+                  <Assurance icon={<MessageSquare className="w-5 h-5" />} label="Custom offers in chat" />
+                </div>
+              </div>
+              <p className="inline-flex items-center gap-2 self-start lg:self-auto rounded-full border border-brand-accent/30 bg-brand-accent-50 px-3.5 py-2 text-xs sm:text-sm font-medium text-brand-accent-dark">
+                <FlaskConical className="w-4 h-4 shrink-0" aria-hidden />
+                Demo marketplace: test payments, sample prices
+              </p>
             </div>
           </div>
         </section>
 
-        {data.categories.length > 0 && (
+        {data.categoryCards.length > 0 && (
           <section className="py-16 sm:py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <SectionHead eyebrow="Categories" title="Explore by discipline" link={{ href: "/search", label: "Browse all services" }} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line border border-line rounded-2xl overflow-hidden">
-                {data.categories.map((cat: any, i: number) => {
-                  const Icon = ICON_MAP[cat.icon_name] || Globe;
+              <SectionHead
+                eyebrow="Categories"
+                title="Explore by discipline"
+                sub={
+                  <>
+                    <CountUp value={data.categoryCards.length} /> categories,{" "}
+                    <CountUp value={data.activeGigs} /> active services
+                    {data.verifiedSellers > 0 && (
+                      <>
+                        {" "}from <CountUp value={data.verifiedSellers} /> sellers
+                      </>
+                    )}
+                    . Prices shown are sample prices for this demo.
+                  </>
+                }
+                link={{ href: "/search", label: "Browse all services" }}
+              />
+              <ul className="cat-row -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-5 sm:overflow-visible">
+                {data.categoryCards.map((cat, i) => {
+                  const src = data.categories.find((c: any) => c.id === cat.id) as any;
+                  const Icon = ICON_MAP[src?.icon_name] || Globe;
                   return (
-                    <Link
+                    <Reveal
+                      as="li"
                       key={cat.id}
-                      href={`/category/${cat.slug}`}
-                      className="group relative bg-white p-6 sm:p-7 flex items-start gap-5 transition-colors hover:bg-canvas-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary"
+                      delay={(i % 3) * 70}
+                      className="w-[82%] max-w-[22rem] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink"
                     >
-                      <span className="font-display text-sm text-ink-subtle tabular-nums pt-1 w-6">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="w-10 h-10 mb-4 rounded-full bg-brand-primary-50 text-brand-primary flex items-center justify-center transition-colors group-hover:bg-brand-primary group-hover:text-white">
-                          <Icon className="w-[18px] h-[18px]" />
-                        </div>
-                        <h3 className="font-display text-xl text-ink mb-1">{cat.name}</h3>
-                        <p className="text-sm text-ink-subtle">{cat.gig_count ?? 0} services</p>
-                      </div>
-                      <ArrowUpRight className="w-5 h-5 text-ink-faint transition-all group-hover:text-ink group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
-                    </Link>
+                      <CategoryCard cat={cat} Icon={Icon} />
+                    </Reveal>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           </section>
         )}
 
-        <section className="py-16 sm:py-24 bg-white border-y border-line">
+        <section className="py-16 sm:py-24 border-t border-line">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <SectionHead eyebrow="Most ordered" title="Popular right now" link={{ href: "/search?sort=best_selling", label: "See all" }} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -257,22 +339,7 @@ export default async function HomePage() {
         <section className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <SectionHead eyebrow="How an order moves" title="Four steps, one lane" link={{ href: "/how-it-works", label: "How it works" }} />
-            <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {STEPS.map((step, i) => (
-                <li key={step.t} className="relative rounded-2xl border border-line bg-white p-6">
-                  <div className="flex items-center justify-between mb-8">
-                    <span className="w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center">
-                      <step.icon className="w-4 h-4" aria-hidden />
-                    </span>
-                    <span className="font-display text-3xl text-line-strong tabular-nums" aria-hidden>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-semibold text-ink mb-2">{step.t}</h3>
-                  <p className="text-sm text-ink-muted leading-relaxed">{step.d}</p>
-                </li>
-              ))}
-            </ol>
+            <OrderSteps steps={STEPS} />
           </div>
         </section>
 
@@ -377,7 +444,17 @@ const STEPS = [
   { icon: PackageCheck, t: "Review and approve", d: "Request a revision or approve the work. Leave a review, and add a tip if you like." },
 ];
 
-function SectionHead({ eyebrow, title, link }: { eyebrow: string; title: string; link?: { href: string; label: string } }) {
+function SectionHead({
+  eyebrow,
+  title,
+  sub,
+  link,
+}: {
+  eyebrow: string;
+  title: string;
+  sub?: React.ReactNode;
+  link?: { href: string; label: string };
+}) {
   return (
     <div className="flex items-end justify-between mb-8 sm:mb-10 flex-wrap gap-4">
       <div>
@@ -386,11 +463,12 @@ function SectionHead({ eyebrow, title, link }: { eyebrow: string; title: string;
           {eyebrow}
         </p>
         <h2 className="font-heading text-3xl sm:text-4xl text-ink">{title}</h2>
+        {sub && <p className="mt-3 text-sm sm:text-base text-ink-muted max-w-2xl">{sub}</p>}
       </div>
       {link && (
         <Link
           href={link.href}
-          className="group inline-flex items-center gap-1.5 text-sm font-semibold text-ink border-b border-ink/30 pb-0.5 hover:border-ink transition-colors"
+          className="group inline-flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-ink underline decoration-ink/30 underline-offset-[6px] hover:decoration-ink transition-colors"
         >
           {link.label}
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
@@ -404,7 +482,7 @@ function Assurance({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div className="flex items-center gap-2.5 text-ink-muted">
       <span className="text-brand-primary shrink-0">{icon}</span>
-      <span className="text-xs sm:text-sm font-medium">{label}</span>
+      <span className="text-sm font-medium">{label}</span>
     </div>
   );
 }
