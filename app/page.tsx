@@ -8,8 +8,12 @@ import {
   Briefcase,
   ShieldCheck,
   Clock,
-  CheckCircle2,
   ArrowRight,
+  ArrowUpRight,
+  Search as SearchIcon,
+  MessageSquare,
+  PackageCheck,
+  FlaskConical,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -131,66 +135,106 @@ async function loadHomeData() {
 
 export default async function HomePage() {
   const data = await loadHomeData();
+  const heroGigs = data.featuredGigs.filter((g) => g.thumbnail_url).slice(0, 3);
 
   return (
     <>
       <Navbar />
-      <main>
-        <section className="hero-bg border-b border-line">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-ink leading-[1.05] tracking-tight mb-5 text-balance">
-              Find the right freelancer. Get it done.
-            </h1>
-            <p className="text-ink-muted text-base sm:text-lg mb-8 max-w-2xl mx-auto text-balance leading-relaxed">
-              Browse services from verified professionals. Quality work, transparent pricing, secure payments.
-            </p>
-            <div className="max-w-2xl mx-auto mb-6">
-              <SearchAutocomplete size="lg" placeholder="What service are you looking for today?" />
+      <main id="main">
+        <section className="hero-bg grain border-b border-line overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-20 sm:pb-24 grid lg:grid-cols-[1.15fr_0.85fr] gap-12 lg:gap-16 items-center">
+            <div>
+              <p className="eyebrow rise mb-5">
+                <span className="w-6 h-px bg-brand-primary" aria-hidden />
+                A marketplace for focused, scoped work
+              </p>
+              <h1 className="font-heading text-[2.6rem] leading-[1.02] sm:text-6xl lg:text-[4.5rem] text-ink mb-6 text-balance rise rise-1">
+                Hire the specialist.{" "}
+                <span className="italic-accent">Skip the guesswork.</span>
+              </h1>
+              <p className="text-ink-muted text-base sm:text-lg mb-8 max-w-xl leading-relaxed text-pretty rise rise-2">
+                Fixed-scope services with packages, delivery dates and revisions agreed before you pay.
+                Message the seller, accept an offer and track the order in one place.
+              </p>
+              <div className="max-w-xl mb-6 rise rise-3">
+                <SearchAutocomplete size="lg" placeholder="Try landing page, logo or chatbot" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 rise rise-3">
+                <span className="text-2xs font-semibold uppercase tracking-[0.14em] text-ink-subtle mr-1">Popular</span>
+                {["Web Design", "Logo Design", "Bubble.io", "React Native", "AI Integration"].map((t) => (
+                  <Link
+                    key={t}
+                    href={`/search?q=${encodeURIComponent(t)}`}
+                    className="inline-flex items-center h-8 px-3.5 rounded-full bg-white/80 border border-line-strong text-xs font-medium text-ink-muted hover:border-ink hover:text-ink hover:bg-white transition-colors"
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mr-1">Popular</span>
-              {["Web Design", "Logo Design", "Bubble.io", "React Native", "AI Integration"].map((t) => (
-                <Link
-                  key={t}
-                  href={`/search?q=${encodeURIComponent(t)}`}
-                  className="inline-flex items-center h-7 px-3 rounded-full bg-white border border-line-strong text-xs font-medium text-ink-muted hover:border-brand-primary hover:text-brand-primary-dark hover:bg-brand-primary-50 transition-colors"
-                >
-                  {t}
-                </Link>
-              ))}
-            </div>
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center max-w-3xl mx-auto">
-              <Stat number={`${data.activeGigs.toLocaleString()}+`} label="Active gigs" />
-              <Stat number={`${data.verifiedSellers.toLocaleString()}+`} label="Verified sellers" />
-              <Stat number="Escrow" label="Secure payments" />
-              <Stat number="24/7" label="Support" />
+
+            {heroGigs.length > 0 && (
+              <div className="relative hidden sm:block h-[420px] lg:h-[480px] rise rise-2" aria-hidden>
+                {heroGigs.map((g, i) => (
+                  <div
+                    key={g.id}
+                    className={[
+                      "absolute w-[62%] rounded-2xl bg-white p-1.5 shadow-card-hover border border-line",
+                      i === 0 ? "left-0 top-6 -rotate-3 z-10" : "",
+                      i === 1 ? "right-0 top-0 rotate-2 z-20" : "",
+                      i === 2 ? "left-[18%] bottom-0 rotate-1 z-30" : "",
+                    ].join(" ")}
+                  >
+                    <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-canvas">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={g.thumbnail_url as string} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center justify-between gap-3 px-2 py-2.5">
+                      <span className="text-xs font-medium text-ink truncate">{g.seller.full_name}</span>
+                      <span className="font-display text-base text-ink tabular-nums shrink-0">
+                        from ${Math.round(g.starting_price)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-line bg-white/60">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
+              <Assurance icon={<ShieldCheck className="w-4 h-4" />} label="Funds held until delivery" />
+              <Assurance icon={<Clock className="w-4 h-4" />} label="Delivery date per package" />
+              <Assurance icon={<MessageSquare className="w-4 h-4" />} label="Custom offers in chat" />
+              <Assurance icon={<FlaskConical className="w-4 h-4" />} label="Demo: Stripe test mode" />
             </div>
           </div>
         </section>
 
         {data.categories.length > 0 && (
-          <section className="py-16 sm:py-20 border-b border-line">
+          <section className="py-16 sm:py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
-                <h2 className="font-heading text-2xl sm:text-3xl text-ink">Explore services</h2>
-                <Link href="/search" className="text-sm font-medium text-brand-primary-dark hover:underline">
-                  Browse all →
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {data.categories.map((cat: any) => {
+              <SectionHead eyebrow="Categories" title="Explore by discipline" link={{ href: "/search", label: "Browse all services" }} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line border border-line rounded-2xl overflow-hidden">
+                {data.categories.map((cat: any, i: number) => {
                   const Icon = ICON_MAP[cat.icon_name] || Globe;
                   return (
                     <Link
                       key={cat.id}
                       href={`/category/${cat.slug}`}
-                      className="group bg-white border border-line rounded-xl p-5 text-center transition-all hover:border-line-strong hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                      className="group relative bg-white p-6 sm:p-7 flex items-start gap-5 transition-colors hover:bg-canvas-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-primary"
                     >
-                      <div className="w-11 h-11 mx-auto mb-3 rounded-xl bg-brand-primary-50 text-brand-primary-dark flex items-center justify-center transition-colors group-hover:bg-brand-primary group-hover:text-white">
-                        <Icon className="w-5 h-5" />
+                      <span className="font-display text-sm text-ink-subtle tabular-nums pt-1 w-6">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="w-10 h-10 mb-4 rounded-full bg-brand-primary-50 text-brand-primary flex items-center justify-center transition-colors group-hover:bg-brand-primary group-hover:text-white">
+                          <Icon className="w-[18px] h-[18px]" />
+                        </div>
+                        <h3 className="font-display text-xl text-ink mb-1">{cat.name}</h3>
+                        <p className="text-sm text-ink-subtle">{cat.gig_count ?? 0} services</p>
                       </div>
-                      <h3 className="font-semibold text-sm text-ink mb-0.5 truncate">{cat.name}</h3>
-                      <p className="text-xs text-ink-subtle">{cat.gig_count ?? 0} gigs</p>
+                      <ArrowUpRight className="w-5 h-5 text-ink-faint transition-all group-hover:text-ink group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden />
                     </Link>
                   );
                 })}
@@ -199,80 +243,80 @@ export default async function HomePage() {
           </section>
         )}
 
-        <section className="py-16 sm:py-20 border-b border-line">
+        <section className="py-16 sm:py-24 bg-white border-y border-line">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
-              <div>
-                <h2 className="font-heading text-2xl sm:text-3xl text-ink">Popular this week</h2>
-                <p className="text-sm text-ink-subtle mt-1">Top-rated gigs across every category.</p>
-              </div>
-              <Link href="/search?sort=best_selling" className="text-sm font-medium text-brand-primary-dark hover:underline shrink-0">
-                See all <ArrowRight className="w-3 h-3 inline -mt-0.5" />
-              </Link>
+            <SectionHead eyebrow="Most ordered" title="Popular right now" link={{ href: "/search?sort=best_selling", label: "See all" }} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {data.featuredGigs.length === 0
+                ? Array.from({ length: 4 }).map((_, i) => <GigCardSkeleton key={i} />)
+                : data.featuredGigs.map((g) => <GigCard key={g.id} gig={g} />)}
             </div>
-            {data.featuredGigs.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {Array.from({ length: 4 }).map((_, i) => <GigCardSkeleton key={i} />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {data.featuredGigs.map((g) => <GigCard key={g.id} gig={g} />)}
-              </div>
-            )}
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 border-b border-line bg-canvas-subtle">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-dark mb-3">Pricing</p>
-              <h2 className="font-heading text-2xl sm:text-3xl text-ink mb-2 text-balance">
+        <section className="py-16 sm:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <SectionHead eyebrow="How an order moves" title="Four steps, one lane" link={{ href: "/how-it-works", label: "How it works" }} />
+            <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {STEPS.map((step, i) => (
+                <li key={step.t} className="relative rounded-2xl border border-line bg-white p-6">
+                  <div className="flex items-center justify-between mb-8">
+                    <span className="w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center">
+                      <step.icon className="w-4 h-4" aria-hidden />
+                    </span>
+                    <span className="font-display text-3xl text-line-strong tabular-nums" aria-hidden>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-ink mb-2">{step.t}</h3>
+                  <p className="text-sm text-ink-muted leading-relaxed">{step.d}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="py-16 sm:py-24 bg-ink text-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-center">
+            <div>
+              <p className="eyebrow !text-[#9FD3C1] mb-4">
+                <span className="w-6 h-px bg-[#9FD3C1]" aria-hidden />
+                Pricing
+              </p>
+              <h2 className="font-heading text-3xl sm:text-4xl !text-white mb-4 text-balance leading-tight">
                 Transparent fees. No surprises at checkout.
               </h2>
-              <p className="text-sm sm:text-base text-ink-muted max-w-2xl mx-auto leading-relaxed">
-                Honest pricing — here&apos;s exactly what you pay and what sellers earn.
+              <p className="text-white/75 text-base leading-relaxed max-w-md">
+                What a buyer pays and what a seller keeps on a $100 order. The same breakdown appears on every checkout summary.
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="grid sm:grid-cols-2 gap-4">
               <FeeCard
-                title="If you order"
-                base="$100"
+                title="Buyer pays"
+                base="on a $100 order"
                 paid="$105.50"
                 breakdown={[
                   { label: "Service", amount: "$100.00" },
                   { label: "Service fee (5.5%)", amount: "$5.50" },
                 ]}
-                accent="border-brand-primary/30 bg-white"
-                amountColor="text-brand-primary-dark"
               />
               <FeeCard
-                title="A seller receives"
-                base="from your $100"
+                title="Seller receives"
+                base="from the same order"
                 paid="$80.00"
                 breakdown={[
                   { label: "Order amount", amount: "$100.00" },
-                  { label: "Commission (20%)", amount: "−$20.00" },
+                  { label: "Commission (20%)", amount: "-$20.00" },
                 ]}
-                accent="border-brand-accent/30 bg-white"
-                amountColor="text-brand-accent-dark"
               />
             </div>
-            <p className="text-xs text-ink-subtle text-center mt-6 max-w-2xl mx-auto leading-relaxed">
-              The 20% seller commission funds platform security, payment protection, dispute resolution,
-              and the team behind Worklane.
-            </p>
           </div>
         </section>
 
         {data.topSellers.length > 0 && (
-          <section className="py-16 sm:py-20 border-b border-line">
+          <section className="py-16 sm:py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="flex items-baseline justify-between mb-8 flex-wrap gap-3">
-                <div>
-                  <h2 className="font-heading text-2xl sm:text-3xl text-ink">Our top sellers</h2>
-                  <p className="text-sm text-ink-subtle mt-1">Highest-rated professionals on the platform.</p>
-                </div>
-              </div>
+              <SectionHead eyebrow="Sellers" title="Highest rated sellers" />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {data.topSellers.map((s) => (
                   <SellerCard
@@ -291,38 +335,32 @@ export default async function HomePage() {
           </section>
         )}
 
-        <section className="py-16 sm:py-20">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F4845] via-[#0F766E] to-[#064E50] text-white px-6 sm:px-10 py-14 sm:py-16">
+        <section className="pb-16 sm:pb-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="relative overflow-hidden rounded-3xl bg-brand-primary text-white px-6 sm:px-12 py-12 sm:py-16 grid md:grid-cols-[1fr_auto] gap-8 items-end">
               <div
-                className="absolute inset-0 opacity-[0.12] pointer-events-none"
-                style={{
-                  backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
-                  backgroundSize: "28px 28px",
-                }}
+                className="absolute inset-0 opacity-[0.08] pointer-events-none"
+                aria-hidden
+                style={{ backgroundImage: "linear-gradient(to right, #fff 1px, transparent 1px)", backgroundSize: "96px 100%" }}
               />
-              <div className="relative max-w-2xl mx-auto text-center">
-                <p className="text-xs font-semibold uppercase tracking-wider text-brand-primary-50/80 mb-3">
+              <div className="relative max-w-2xl">
+                <p className="eyebrow !text-white/80 mb-4">
+                  <span className="w-6 h-px bg-white/70" aria-hidden />
                   Start selling
                 </p>
-                <h2 className="font-heading text-3xl sm:text-4xl text-white text-balance leading-tight mb-3">
-                  Turn your skills into income.
+                <h2 className="font-heading text-3xl sm:text-5xl !text-white text-balance leading-[1.05] mb-4">
+                  Package your skills. <span className="italic">Get paid on delivery.</span>
                 </h2>
-                <p className="text-white/80 text-base sm:text-lg mb-7 max-w-xl mx-auto text-balance">
-                  Join thousands of professionals earning on Worklane — no upfront cost, no monthly fees.
+                <p className="text-white/80 text-base sm:text-lg max-w-xl text-pretty">
+                  Publish a gig with three tiers, answer buyers in chat, send custom offers and withdraw cleared earnings. No upfront cost.
                 </p>
-                <Link
-                  href="/become-seller"
-                  className="inline-flex items-center justify-center h-12 px-6 rounded-md bg-white text-ink font-semibold text-sm hover:bg-canvas-subtle transition-colors"
-                >
-                  Start selling today
-                </Link>
-                <div className="mt-10 grid grid-cols-3 gap-6 max-w-md mx-auto">
-                  <Trust icon={<ShieldCheck className="w-4 h-4" />} title="Escrow protected" />
-                  <Trust icon={<Clock className="w-4 h-4" />} title="On-time delivery" />
-                  <Trust icon={<CheckCircle2 className="w-4 h-4" />} title="Verified reviews" />
-                </div>
               </div>
+              <Link
+                href="/become-seller"
+                className="relative inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-white text-ink font-semibold text-sm hover:bg-canvas transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary"
+              >
+                Become a seller <ArrowRight className="w-4 h-4" aria-hidden />
+              </Link>
             </div>
           </div>
         </section>
@@ -332,56 +370,59 @@ export default async function HomePage() {
   );
 }
 
-function Stat({ number, label }: { number: string; label: string }) {
+const STEPS = [
+  { icon: SearchIcon, t: "Pick a package", d: "Compare Basic, Standard and Premium side by side. Scope, revisions and delivery are fixed up front." },
+  { icon: MessageSquare, t: "Agree the details", d: "Message the seller or accept a custom offer. Share requirements once the order starts." },
+  { icon: ShieldCheck, t: "Pay into escrow", d: "Payment is held by the platform and released only when you accept the delivery." },
+  { icon: PackageCheck, t: "Review and approve", d: "Request a revision or approve the work. Leave a review, and add a tip if you like." },
+];
+
+function SectionHead({ eyebrow, title, link }: { eyebrow: string; title: string; link?: { href: string; label: string } }) {
   return (
-    <div>
-      <p className="font-heading text-2xl sm:text-3xl text-ink tabular-nums">{number}</p>
-      <p className="text-xs text-ink-subtle mt-1 uppercase tracking-wider font-medium">{label}</p>
+    <div className="flex items-end justify-between mb-8 sm:mb-10 flex-wrap gap-4">
+      <div>
+        <p className="eyebrow mb-3">
+          <span className="w-6 h-px bg-brand-primary" aria-hidden />
+          {eyebrow}
+        </p>
+        <h2 className="font-heading text-3xl sm:text-4xl text-ink">{title}</h2>
+      </div>
+      {link && (
+        <Link
+          href={link.href}
+          className="group inline-flex items-center gap-1.5 text-sm font-semibold text-ink border-b border-ink/30 pb-0.5 hover:border-ink transition-colors"
+        >
+          {link.label}
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+        </Link>
+      )}
     </div>
   );
 }
 
-function FeeCard({
-  title,
-  base,
-  paid,
-  breakdown,
-  accent,
-  amountColor,
-}: {
-  title: string;
-  base: string;
-  paid: string;
-  breakdown: { label: string; amount: string }[];
-  accent: string;
-  amountColor: string;
-}) {
+function Assurance({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className={`rounded-2xl border-2 p-6 sm:p-7 ${accent}`}>
-      <div className="flex items-baseline justify-between gap-2 mb-1">
-        <p className="text-sm font-medium text-ink">{title}</p>
-        <p className="text-xs text-ink-subtle">{base}</p>
-      </div>
-      <p className={`font-heading text-4xl sm:text-5xl mb-5 tabular-nums tracking-tight ${amountColor}`}>{paid}</p>
-      <div className="space-y-2 text-sm pt-4 border-t border-line">
+    <div className="flex items-center gap-2.5 text-ink-muted">
+      <span className="text-brand-primary shrink-0">{icon}</span>
+      <span className="text-xs sm:text-sm font-medium">{label}</span>
+    </div>
+  );
+}
+
+function FeeCard({ title, base, paid, breakdown }: { title: string; base: string; paid: string; breakdown: { label: string; amount: string }[] }) {
+  return (
+    <div className="rounded-2xl bg-white/[0.06] ring-1 ring-white/15 p-6">
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="text-xs text-white/70 mb-4">{base}</p>
+      <p className="font-display text-5xl text-white mb-6 tabular-nums">{paid}</p>
+      <div className="space-y-2 text-sm pt-4 border-t border-white/15">
         {breakdown.map((b) => (
-          <div key={b.label} className="flex justify-between">
-            <span className="text-ink-muted">{b.label}</span>
-            <span className="tabular-nums font-semibold text-ink">{b.amount}</span>
+          <div key={b.label} className="flex justify-between gap-3">
+            <span className="text-white/75">{b.label}</span>
+            <span className="tabular-nums font-semibold text-white">{b.amount}</span>
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function Trust({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-9 h-9 rounded-full bg-white/10 ring-1 ring-white/15 flex items-center justify-center text-white/90">
-        {icon}
-      </div>
-      <span className="text-xs text-white/75 font-medium text-center leading-tight">{title}</span>
     </div>
   );
 }
