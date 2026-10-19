@@ -37,7 +37,7 @@ export function CustomOfferCard({ offerId, mine }: { offerId: string; mine: bool
   }
 
   return (
-    <div className={`max-w-md ${mine ? "ml-auto" : ""}`}>
+    <div className={`offer-pop max-w-md ${mine ? "ml-auto" : ""}`}>
       <div className="bg-white border-2 border-brand-primary rounded-xl p-4">
         <div className="flex items-center gap-2 text-brand-primary text-xs font-semibold mb-2 uppercase">
           <Briefcase className="w-4 h-4" />

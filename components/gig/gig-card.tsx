@@ -118,7 +118,7 @@ export function GigCard({
       </div>
 
       <div className="flex flex-1 flex-col px-4 pt-3.5 pb-4">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="gig-lift flex items-center gap-2 mb-2">
           <Avatar className="w-6 h-6 shrink-0 ring-1 ring-line">
             {gig.seller.avatar_url && <AvatarImage src={gig.seller.avatar_url} alt="" />}
             <AvatarFallback className="text-[10px] bg-brand-primary-50 text-brand-primary-dark font-semibold">
@@ -143,7 +143,7 @@ export function GigCard({
           {gig.title}
         </p>
 
-        <div className="mt-auto flex items-baseline justify-between">
+        <div className="gig-lift mt-auto flex items-baseline justify-between">
           <span className="text-2xs text-ink-subtle uppercase tracking-[0.12em] font-semibold">Starting at</span>
           <span className="font-display text-xl text-ink tabular-nums">
             {formatMoney(gig.starting_price)}

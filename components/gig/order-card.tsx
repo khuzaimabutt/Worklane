@@ -31,7 +31,17 @@ export function OrderCard({
 
   return (
     <div className="bg-white border border-line rounded-2xl overflow-hidden shadow-card">
-      <div role="tablist" aria-label="Package tiers" className="flex border-b border-line bg-canvas-subtle">
+      <div role="tablist" aria-label="Package tiers" className="relative flex border-b border-line bg-canvas-subtle">
+        {packages.length > 0 && (
+          <span
+            aria-hidden
+            className="tab-underline absolute bottom-0 left-0 h-0.5 bg-brand-primary"
+            style={{
+              width: `${100 / packages.length}%`,
+              transform: `translateX(${Math.max(0, packages.findIndex((p) => p.package_type === pkgType)) * 100}%)`,
+            }}
+          />
+        )}
         {packages.map((p) => {
           const active = p.package_type === pkgType;
           const isMid = p.package_type === "standard";
@@ -44,7 +54,7 @@ export function OrderCard({
               className={cn(
                 "relative flex-1 h-12 text-sm font-medium capitalize transition-colors",
                 active
-                  ? "bg-white text-ink border-b-2 border-brand-primary -mb-px"
+                  ? "bg-white text-ink"
                   : "text-ink-subtle hover:text-ink hover:bg-white/60"
               )}
             >
@@ -67,8 +77,10 @@ export function OrderCard({
               <p className="text-xs text-ink-subtle mt-1 line-clamp-2">{currentPkg.description}</p>
             )}
           </div>
-          <p className="font-heading text-2xl text-ink tabular-nums shrink-0">
-            {formatMoney(Number(currentPkg?.price ?? 0))}
+          <p className="font-heading text-2xl text-ink tabular-nums shrink-0 overflow-hidden">
+            <span key={currentPkg?.id ?? pkgType} className="price-roll">
+              {formatMoney(Number(currentPkg?.price ?? 0))}
+            </span>
           </p>
         </div>
 

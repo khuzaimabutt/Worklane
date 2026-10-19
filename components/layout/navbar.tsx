@@ -30,6 +30,14 @@ export function Navbar() {
   const pathname = usePathname();
   const { user, setUser } = useUser();
   const [unread, setUnread] = useState(0);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -78,8 +86,8 @@ export function Navbar() {
   const isActive = (href: string) => pathname === href || pathname?.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-line">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
+    <header data-scrolled={scrolled} className="nav-shell sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-line">
+      <div className="nav-inner max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
         <Link
           href="/"
           className="text-xl font-semibold text-brand-primary tracking-tight whitespace-nowrap shrink-0 hover:text-brand-primary-dark transition-colors"

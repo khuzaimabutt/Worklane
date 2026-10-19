@@ -254,7 +254,7 @@ export default function MessagesPage() {
                       return <CustomOfferCard key={m.id} offerId={m.custom_offer_id} mine={mine} />;
                     }
                     return (
-                      <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                      <div key={m.id} className={cn("msg-in flex", mine ? "justify-end" : "justify-start")}>
                         <div
                           className={cn(
                             "max-w-[70%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
