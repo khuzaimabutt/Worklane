@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { formatMoney } from "@/lib/utils/format";
 import { SpotlightLink } from "./spotlight-link";
@@ -24,14 +25,14 @@ export function CategoryCard({
 }) {
   const empty = cat.count === 0;
   const [base, float] = cat.thumbs;
+  const href = `/category/${cat.slug}`;
 
-  return (
-    <SpotlightLink
-      href={`/category/${cat.slug}`}
-      className={`cat-card group relative isolate flex h-full min-h-[240px] flex-col overflow-hidden rounded-3xl text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas ${
-        empty ? "bg-brand-primary cat-empty" : "bg-ink"
-      } ${featured ? "min-h-[320px] sm:min-h-[400px] lg:min-h-[520px]" : ""}`}
-    >
+  const className = `cat-card group relative isolate flex h-full min-h-[240px] flex-col overflow-hidden rounded-3xl text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas ${
+    empty ? "bg-brand-primary cat-empty" : "bg-ink"
+  } ${featured ? "min-h-[320px] sm:min-h-[400px] lg:min-h-[520px]" : ""}`;
+
+  const content = (
+    <>
       {base && (
         <Image
           src={base}
@@ -75,7 +76,17 @@ export function CategoryCard({
               </>
             )}
           </p>
-          {empty && <p className="mt-3 text-sm text-white/90">Be the first seller in {cat.name}.</p>}
+          {empty && (
+            <p className="mt-3 text-sm text-white/90">
+              Be the first seller in {cat.name}.{" "}
+              <Link
+                href="/become-seller"
+                className="pointer-events-auto relative z-20 font-semibold underline underline-offset-4 hover:text-white"
+              >
+                Become a seller
+              </Link>
+            </p>
+          )}
           {!empty && cat.chips.length > 0 && (
             <ul className="cat-chips mt-4 flex flex-wrap gap-1.5" aria-label="Examples">
               {cat.chips.map((c) => (
@@ -90,6 +101,28 @@ export function CategoryCard({
           )}
         </div>
       </div>
+    </>
+  );
+
+  // An empty tile holds a second link (Become a seller), and links cannot nest. So the
+  // category link covers the tile underneath, and the content above it passes clicks through
+  // except for the seller link.
+  if (empty) {
+    return (
+      <div className={className}>
+        <Link
+          href={href}
+          aria-label={`${cat.name} category`}
+          className="absolute inset-0 z-0 rounded-3xl focus-visible:outline-none"
+        />
+        <div className="pointer-events-none relative z-10 flex flex-1 flex-col">{content}</div>
+      </div>
+    );
+  }
+
+  return (
+    <SpotlightLink href={href} className={className}>
+      {content}
     </SpotlightLink>
   );
 }

@@ -112,7 +112,7 @@ export function GigCard({
         {gig.seller.seller_level !== "new_seller" && (
           <SellerLevelBadge
             level={gig.seller.seller_level}
-            className="absolute left-2.5 top-2.5 shadow-card bg-white/95 backdrop-blur"
+            className="absolute left-2.5 top-2.5 shadow-card"
           />
         )}
       </div>
