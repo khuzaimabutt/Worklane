@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['"Fraunces"', "Georgia", "serif"],
+        heading: ['"Inter Tight"', '"Inter"', "system-ui", "sans-serif"],
         sans: ['"Inter"', "system-ui", "sans-serif"],
-        display: ['"Fraunces"', "Georgia", "serif"],
+        display: ['"Inter Tight"', '"Inter"', "system-ui", "sans-serif"],
       },
       colors: {
         brand: {
