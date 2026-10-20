@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { formatMoney } from "@/lib/utils/format";
+import { SpotlightLink } from "./spotlight-link";
 
 export interface CategoryCardData {
   id: string;
@@ -26,7 +26,7 @@ export function CategoryCard({
   const [base, float] = cat.thumbs;
 
   return (
-    <Link
+    <SpotlightLink
       href={`/category/${cat.slug}`}
       className={`cat-card group relative isolate flex h-full min-h-[240px] flex-col overflow-hidden rounded-3xl text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-canvas ${
         empty ? "bg-brand-primary cat-empty" : "bg-ink"
@@ -90,6 +90,6 @@ export function CategoryCard({
           )}
         </div>
       </div>
-    </Link>
+    </SpotlightLink>
   );
 }

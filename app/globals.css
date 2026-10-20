@@ -190,6 +190,18 @@ a {
 }
 .cat-chips { transition: transform var(--dur-base) var(--ease-out); }
 .cat-card:hover .cat-chips, .cat-card:focus-visible .cat-chips { transform: translateY(-3px); }
+.cat-spot { position: relative; }
+.cat-spot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity var(--dur-base, 250ms) ease;
+}
+.cat-spot:hover::after, .cat-spot:focus-visible::after { opacity: 1; }
 
 /* Hero thumbnail fan */
 @keyframes fan-in {
