@@ -70,7 +70,7 @@ async function loadHomeData() {
       sb.from("categories").select("id, name, parent_id, sort_order, is_active").not("parent_id", "is", null).order("sort_order"),
       sb
         .from("gigs")
-        .select("id, title, category_id")
+        .select("id, title, category_id, thumbnail_url")
         .eq("status", "active")
         .order("total_orders", { ascending: false })
         .order("title"),
@@ -122,12 +122,15 @@ async function loadHomeData() {
     const countByCat = new Map<string, number>();
     const minPriceByCat = new Map<string, number>();
     const titlesByCat = new Map<string, string[]>();
+    const thumbsByCat = new Map<string, string[]>();
     for (const g of activeRows ?? []) {
       const cid = topIdOf((g as any).category_id);
       countByCat.set(cid, (countByCat.get(cid) ?? 0) + 1);
       const gp = minPriceByGig.get((g as any).id);
       if (gp != null) minPriceByCat.set(cid, Math.min(minPriceByCat.get(cid) ?? Infinity, gp));
       titlesByCat.set(cid, [...(titlesByCat.get(cid) ?? []), (g as any).title]);
+      const thumb = (g as any).thumbnail_url as string | null;
+      if (thumb) thumbsByCat.set(cid, [...(thumbsByCat.get(cid) ?? []), thumb].slice(0, 2));
     }
     const categoryCards: CategoryCardData[] = (parentCategories ?? []).map((c: any) => {
       const subs = (subCategories ?? [])
@@ -142,6 +145,7 @@ async function loadHomeData() {
         count: countByCat.get(c.id) ?? 0,
         minPrice: minPriceByCat.get(c.id) ?? null,
         chips: [...subs, ...examples.filter((e) => !subs.includes(e))].slice(0, 3),
+        thumbs: thumbsByCat.get(c.id) ?? [],
       };
     });
 
@@ -314,9 +318,11 @@ export default async function HomePage() {
                       as="li"
                       key={cat.id}
                       delay={(i % 3) * 70}
-                      className="w-[82%] max-w-[22rem] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink"
+                      className={`w-[82%] max-w-[22rem] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink ${
+                        i === 0 ? "lg:col-span-2 lg:row-span-2" : ""
+                      }`}
                     >
-                      <CategoryCard cat={cat} Icon={Icon} />
+                      <CategoryCard cat={cat} Icon={Icon} featured={i === 0} />
                     </Reveal>
                   );
                 })}

@@ -180,6 +180,16 @@ a {
 .cat-card:hover .cat-arrow, .cat-card:focus-visible .cat-arrow { transform: translate(3px, -3px); }
 .cat-row { scrollbar-width: none; scroll-padding-left: 1rem; }
 .cat-row::-webkit-scrollbar { display: none; }
+.cat-float { transition: transform var(--dur-slow, 500ms) var(--ease-out); }
+.cat-card:hover .cat-float, .cat-card:focus-visible .cat-float { transform: rotate(5deg) translate(-8px, 6px); }
+.cat-photo { transition: transform var(--dur-slow, 500ms) var(--ease-out); }
+.cat-card:hover .cat-photo, .cat-card:focus-visible .cat-photo { transform: scale(1.04); }
+.cat-empty {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.cat-chips { transition: transform var(--dur-base) var(--ease-out); }
+.cat-card:hover .cat-chips, .cat-card:focus-visible .cat-chips { transform: translateY(-3px); }
 
 /* Hero thumbnail fan */
 @keyframes fan-in {
@@ -243,5 +253,8 @@ a {
   .fan-card { animation: none; opacity: 1; transform: rotate(var(--r)); }
   .cat-card:hover, .cat-card:focus-visible, .group:hover .gig-lift, .nav-shell[data-scrolled="true"] .nav-inner { transform: none; }
   .cat-card:hover .cat-arrow, .cat-card:focus-visible .cat-arrow { transform: none; }
+  .cat-card:hover .cat-float, .cat-card:focus-visible .cat-float,
+  .cat-card:hover .cat-photo, .cat-card:focus-visible .cat-photo,
+  .cat-card:hover .cat-chips, .cat-card:focus-visible .cat-chips { transform: none; }
   .msg-in, .offer-pop, .price-roll { animation: none; }
 }
